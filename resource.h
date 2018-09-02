@@ -10,13 +10,14 @@
 #define ID_DELFIN		204
 #define ID_DELUNFIN		205
 
+#define ID_STATUSBAR	1001
 
 int btnW = 100;
 int btnH = 24;
 int editH = 30;
 int iSelect = 0;
 
-wchar_t WindowTitle[] = L"MyTodo";
+wchar_t WindowTitle[] = L"WinTodo";
 static bool isSaved = true;
 
 HFONT BtnFont = CreateFont(14, 0, 0, 0,

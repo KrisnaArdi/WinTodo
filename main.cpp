@@ -31,7 +31,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UIN
 }
 
 //about dialog procedure, check the dialog in the resource file
-BOOL CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	switch (msg) {
 	case WM_INITDIALOG :
 		return TRUE;
@@ -104,8 +104,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
 				(3 * btnW), btnY, btnW, btnH, hwnd, (HMENU)ID_DELUNFIN, NULL, NULL);
 
-
 		/*Setting Font */
+			//note : i don't know where i should put this code.
 			HWND buttons[4] = {delBtn, delAllBtn, delFin, delUnFin }; //all button control
 			for (int i = 0; i < 4; ++i) { //set font for all button control
 				SendMessage(buttons[i], WM_SETFONT, (WPARAM)BtnFont, TRUE);
@@ -138,13 +138,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					if (((LPNMHDR)lparam)->code == NM_DBLCLK) {
 						int iIndex = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 						if (iIndex == -1) break;
-						SendMessage(lview, LVM_EDITLABEL, (WPARAM)iIndex, NULL); //call esit label
+						SendMessage(lview, LVM_EDITLABEL, (WPARAM)iIndex, NULL); //call edit label
+						
 					}
 
 				//processing the end of label edit
 					if (((LPNMHDR)lparam)->code == LVN_ENDLABELEDIT) {
+						
 						int iIndex;
-						wchar_t text[255];
+						TCHAR text[256];
 						HWND hEdit = ListView_GetEditControl(lview); //get the item
 						iIndex = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 						if (iIndex == -1) break;
@@ -153,12 +155,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				
 						GetWindowText(hEdit, text, sizeof(text)); //get item text
 						if (wcslen(text) == 0) return 0; //if the string empty then cancel change wcslen is to check wstring length
-				
+						
 						lvi.pszText = text;
 						lvi.iSubItem = 0;
 						SendMessage(lview, LVM_SETITEMTEXT, (WPARAM)iIndex, (LPARAM)&lvi); //set the item text
-						wcscpy_s(TaskList[iIndex].name, text);
-						ToggleUnsavedTitle(hwnd, 0);
+						
+						if (wcscmp(TaskList[iIndex].name, text) != 0) {
+							ToggleUnsavedTitle(hwnd, 0);
+						}
+						wcscpy_s(TaskList[iIndex].name, text);	
 				}
 
 				//this is to process the checkbox message
@@ -336,7 +341,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				case ID_HELP_ABOUT: {
 					//calling a new dialog
 					DialogBox(GetModuleHandle(NULL),
-						MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutProc);
+						MAKEINTRESOURCE(IDD_ABOUT), hwnd, (DLGPROC)AboutProc);
 				}
 				break;
 				
@@ -362,7 +367,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			SetWindowPos(delBtn, 0, 0, btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //resize the delete button
 			SetWindowPos(delAllBtn, 0, btnW, btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //resize the delete all button
 			SetWindowPos(delFin, 0, (2*btnW), btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //delete finished button
-			SetWindowPos(delUnFin, 0, (3 * btnW), btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //delete unfinished button		
+			SetWindowPos(delUnFin, 0, (3 * btnW), btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //delete unfinished button	
 		}
 		break;
 

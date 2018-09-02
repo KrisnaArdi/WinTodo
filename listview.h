@@ -157,7 +157,7 @@ void WriteTaskToFile(std::vector<Task> TaskList) {
  	fclose(File);
 }
 
-//toggle wether task finishde or not
+//toggle wether task finished or not
 void ToggleTaskStatus(HWND lview, int iItem, int status) {
 	LVITEM lvi;
 
@@ -202,4 +202,3 @@ LRESULT ProcessCustomDraw(LPARAM lparam, std::vector<Task> TaskList) {
 		default: return CDRF_DODEFAULT;
 	}
 }
-
