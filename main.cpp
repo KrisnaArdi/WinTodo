@@ -30,6 +30,18 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UIN
 	return lres;
 }
 
+LRESULT CALLBACK LViewProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT_PTR Subclass, DWORD_PTR refdata) {
+	HWND parent = GetParent(hwnd); //get the main hwnd
+	if (msg == WM_CHAR && wparam == VK_DELETE) {
+		SendMessage(parent, WM_COMMAND, ID_DEL, 0);
+		return 0;
+	}
+
+	LRESULT lres = DefSubclassProc(hwnd, msg, wparam, lparam);
+	if (msg == WM_DESTROY) RemoveWindowSubclass(hwnd, EditProc, 0);
+	return lres;
+}
+
 //about dialog procedure, check the dialog in the resource file
 LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	switch (msg) {
@@ -118,8 +130,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			SendMessage(edit, EM_SETCUEBANNER, 0, LPARAM(L"Add a new item here")); //setting placeholder for edit 
 			LoadTaskFromFile(&TaskList, lview); //loading task from file
 			renderTask(TaskList, lview); //render the task
-	
-			SetWindowSubclass(edit, EditProc, 0, 0); //subclassing edit to its procedure
+			
+		//subclassing dialog to its procedure
+			SetWindowSubclass(lview, LViewProc, 0, 0);
+			SetWindowSubclass(edit, EditProc, 0, 0); 
 		}
 		break;
 
