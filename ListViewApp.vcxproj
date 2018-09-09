@@ -171,6 +171,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="options.h" />
     <ClInclude Include="listview.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />

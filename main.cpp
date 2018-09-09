@@ -1,17 +1,19 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <tchar.h>
 #include <commctrl.h>
 #include <vector>
 #include "resource1.h"
 #include "resource.h"
 #include "listview.h"
+#include "options.h"
 
 //using visual styles
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version = '6.0.0.0' processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"")
 
-wchar_t ClassName[] = L"WindowClass";
+wchar_t ClassName[] = _T("WindowClass");
 std::vector<Task> TaskList;
-MSG mesg; //window message
+ MSG mesg; //window message
 
 //the editbox procedure
 LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT_PTR Subclass, DWORD_PTR refdata) {
@@ -30,6 +32,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UIN
 	return lres;
 }
 
+//list view procedure
 LRESULT CALLBACK LViewProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT_PTR Subclass, DWORD_PTR refdata) {
 	HWND parent = GetParent(hwnd); //get the main hwnd
 	if (msg == WM_CHAR && wparam == VK_DELETE) {
@@ -65,9 +68,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	HWND  edit, AddBtn, lview, delBtn, delAllBtn, delFin, delUnFin;
 	LVITEM lvi;
 	RECT rc;
+	
 
 	switch (msg) {
 		case WM_CLOSE: {
+			writeOptionToFile(hwnd);
 			if (isSaved)  PostQuitMessage(0);
 
 			else {
@@ -134,6 +139,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		//subclassing dialog to its procedure
 			SetWindowSubclass(lview, LViewProc, 0, 0);
 			SetWindowSubclass(edit, EditProc, 0, 0); 
+
+			parseOptionFile(hwnd);
 		}
 		break;
 
@@ -247,10 +254,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				case ID_DEL: {
 					lview = GetDlgItem(hwnd, LVIEW);
 					int iSelect = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+					HMENU hmenu = GetMenu(hwnd);
 
 					if (iSelect == -1) MessageBox(NULL, L"Select item first before delete it by clicking the item!", L"Information", MB_ICONINFORMATION | MB_OK);
 				//if an item is not selected	
 					else {
+						if (isMenuChecked(hmenu, ID_CONFIRMONDELETE)) {
+							int confirm = MessageBox(NULL, L"Delete this task?", L"Confirmation", MB_ICONQUESTION | MB_YESNO);
+							if (confirm == IDNO) break;
+						}
 						SendMessage(lview, LVM_DELETEITEM, iSelect, 0); //delete the task from the listview
 						TaskList.erase(TaskList.begin() + iSelect); //delete the task from the vector
 						ToggleUnsavedTitle(hwnd, 0); //toggling the title
@@ -273,7 +285,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					if (confirm == IDYES) {
 						SendMessage(lview, LVM_DELETEALLITEMS, 0, 0);
 						TaskList.clear();
-						MessageBox(NULL, L"All items has been deleted", L"Information", MB_ICONINFORMATION | MB_OK);\
+						MessageBox(NULL, L"All items has been deleted", L"Information", MB_ICONINFORMATION | MB_OK);
 
 						ToggleUnsavedTitle(hwnd, 0); 
 					}
@@ -358,6 +370,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						MAKEINTRESOURCE(IDD_ABOUT), hwnd, (DLGPROC)AboutProc);
 				}
 				break;
+
+				case ID_CONFIRMONDELETE : {
+					HMENU hmenu = GetMenu(hwnd);
+					if(isMenuChecked(hmenu, ID_CONFIRMONDELETE)) CheckMenuItem(hmenu, ID_CONFIRMONDELETE, MF_UNCHECKED);
+					else  CheckMenuItem(hmenu, ID_CONFIRMONDELETE, MF_CHECKED);
+				}break;
 				
 		}
 	}
@@ -416,7 +434,7 @@ int WINAPI WinMain(HINSTANCE hins, HINSTANCE hprev, LPSTR lpcmd, int ncmd) {
 
 	hwnd = CreateWindowEx(WS_EX_CLIENTEDGE,
 		ClassName, WindowTitle, WS_VISIBLE | WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT, 521, 620,
+		CW_USEDEFAULT, CW_USEDEFAULT, 471, 620,
 		NULL, NULL, hins, NULL);
 
 	if (hwnd == NULL) {

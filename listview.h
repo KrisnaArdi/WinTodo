@@ -42,7 +42,7 @@ BOOL InitColumn(HWND lview) {
 
 	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvc.fmt = LVCFMT_LEFT;
-	lvc.cx = 380;
+	lvc.cx = 330;
 	lvc.pszText = L"Task Name";
 
 	ListView_InsertColumn(lview, 1, &lvc);
