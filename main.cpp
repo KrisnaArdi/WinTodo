@@ -11,7 +11,7 @@
 //using visual styles
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version = '6.0.0.0' processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"")
 
-wchar_t ClassName[] = _T("WindowClass");
+TCHAR ClassName[] = _T("WindowClass");
 std::vector<Task> TaskList;
  MSG mesg; //window message
 
@@ -76,7 +76,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			if (isSaved)  PostQuitMessage(0);
 
 			else {
-				int confirm = MessageBox(NULL, L"Your list is still unsaved, save changes to the list?", L"Save your list?", MB_ICONQUESTION | MB_YESNOCANCEL);
+				int confirm = MessageBox(NULL, _T("Your list is still unsaved, save changes to the list?"), _T("Save your list?"), MB_ICONQUESTION | MB_YESNOCANCEL);
 				if (confirm == IDYES) {
 					WriteTaskToFile(TaskList); //saving changes before closing files
 					PostQuitMessage(0);
@@ -95,29 +95,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 			lview = CreateListView(hwnd, LVIEW);
 
-			edit = CreateWindow(L"EDIT", L"",
+			edit = CreateWindow(_T("EDIT"), _T(""),
 				WS_VISIBLE | WS_CHILD | WS_BORDER,
 				0, 0, rc.right - 102, editH,
 				hwnd, (HMENU)ID_INPUT, NULL, NULL);
 
-			AddBtn = CreateWindow(L"BUTTON", L"Add item",
+			AddBtn = CreateWindow(_T("BUTTON"), _T("Add item"),
 				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_USERBUTTON,
 				rc.right - btnW, 0, btnW, editH,
 				hwnd, (HMENU)ID_ADD, NULL, NULL);
 
-			delBtn = CreateWindow(L"Button", L"Delete",
+			delBtn = CreateWindow(_T("Button"), _T("Delete"),
 				WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 				0, btnY, btnW, btnH, hwnd, (HMENU)ID_DEL, NULL, NULL);
 
-			delAllBtn = CreateWindow(L"Button", L"Delete all",
+			delAllBtn = CreateWindow(_T("Button"), _T("Delete all"),
 				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
 				btnW, btnY, btnW, btnH, hwnd, (HMENU)ID_DELALL, NULL, NULL);
 
-			delFin = CreateWindow(L"Button", L"Delete checked",
+			delFin = CreateWindow(_T("Button"), _T("Delete checked"),
 				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
 				(2 * btnW), btnY, btnW, btnH, hwnd, (HMENU)ID_DELFIN, NULL, NULL);
 
-			delUnFin = CreateWindow(L"Button", L"Delete unchecked",
+			delUnFin = CreateWindow(_T("Button"), _T("Delete unchecked"),
 				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
 				(3 * btnW), btnY, btnW, btnH, hwnd, (HMENU)ID_DELUNFIN, NULL, NULL);
 
@@ -132,7 +132,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			SendMessage(edit, WM_SETFONT, (WPARAM)EditFont, TRUE); //edit font
 			SendMessage(lview, WM_SETFONT, (WPARAM)LviewFont, TRUE); //listview font
 
-			SendMessage(edit, EM_SETCUEBANNER, 0, LPARAM(L"Add a new item here")); //setting placeholder for edit 
+			SendMessage(edit, EM_SETCUEBANNER, 0, LPARAM(_T("Add a new item here"))); //setting placeholder for edit 
 			LoadTaskFromFile(&TaskList, lview); //loading task from file
 			renderTask(TaskList, lview); //render the task
 			
@@ -216,14 +216,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				case ID_ADD: {
 					edit = GetDlgItem(hwnd, ID_INPUT);
 					lview = GetDlgItem(hwnd, LVIEW);
-					wchar_t pszText[256];
+					TCHAR pszText[256];
 					int iItem;
 			
 					GetDlgItemText(hwnd, ID_INPUT, pszText, 256); //get the text from input
 			
 				//return an error if the input is blank
 					if (pszText[0] == 0) {
-					MessageBox(NULL, L"You cannot create an empty task!", L"Information", MB_ICONERROR | MB_OK);
+					MessageBox(NULL, _T("You cannot create an empty task!"), _T("Information"), MB_ICONERROR | MB_OK);
 					break;
 				}
 
@@ -241,10 +241,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					ListView_InsertItem(lview, &lvi);
 
 					lvi.iSubItem = 1;
-					lvi.pszText = L"Unfinished";
+					lvi.pszText = _T("Unfinished");
 					ListView_SetItem(lview, &lvi);
 	
-					SetDlgItemText(hwnd, ID_INPUT, L"");
+					SetDlgItemText(hwnd, ID_INPUT, _T(""));
 					SetFocus(edit); //focus to edit control
 
 					ToggleUnsavedTitle(hwnd, 0); //toggling the title 
@@ -256,11 +256,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					int iSelect = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
 					HMENU hmenu = GetMenu(hwnd);
 
-					if (iSelect == -1) MessageBox(NULL, L"Select item first before delete it by clicking the item!", L"Information", MB_ICONINFORMATION | MB_OK);
+					if (iSelect == -1) MessageBox(NULL, _T("Select item first before delete it by clicking the item!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 				//if an item is not selected	
 					else {
 						if (isMenuChecked(hmenu, ID_CONFIRMONDELETE)) {
-							int confirm = MessageBox(NULL, L"Delete this task?", L"Confirmation", MB_ICONQUESTION | MB_YESNO);
+							int confirm = MessageBox(NULL, _T("Delete this task?"), _T("Confirmation"), MB_ICONQUESTION | MB_YESNO);
 							if (confirm == IDNO) break;
 						}
 						SendMessage(lview, LVM_DELETEITEM, iSelect, 0); //delete the task from the listview
@@ -275,17 +275,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					int iItem = SendMessage(lview, LVM_GETITEMCOUNT, 0, 0);
 	
 					if (iItem == 0) {
-						MessageBox(NULL, L"There is no item!", L"ERROR!", MB_ICONERROR | MB_OK);
+						MessageBox(NULL, _T("There is no item!"), _T("ERROR!"), MB_ICONERROR | MB_OK);
 						break;
 					}
 			
 				//make a convirmation box
-					int confirm = MessageBox(NULL, L"You are about to delete all task items, are you sure?", L"Confirmation", MB_ICONQUESTION | MB_YESNO);
+					int confirm = MessageBox(NULL, _T("You are about to delete all task items, are you sure?"), _T("Confirmation"), MB_ICONQUESTION | MB_YESNO);
 				//user press yes
 					if (confirm == IDYES) {
 						SendMessage(lview, LVM_DELETEALLITEMS, 0, 0);
 						TaskList.clear();
-						MessageBox(NULL, L"All items has been deleted", L"Information", MB_ICONINFORMATION | MB_OK);
+						MessageBox(NULL, _T("All items has been deleted"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 
 						ToggleUnsavedTitle(hwnd, 0); 
 					}
@@ -298,7 +298,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					lview = GetDlgItem(hwnd, LVIEW);
 					std::vector<int> tmp; //this is a vector of finished item index number
 			
-					int confirm = MessageBox(NULL, L"All checked items is about to be deleted", L"Confirmation", MB_ICONQUESTION |MB_OKCANCEL);
+					int confirm = MessageBox(NULL, _T("All checked items is about to be deleted"), _T("Confirmation"), MB_ICONQUESTION |MB_OKCANCEL);
 					
 					if (confirm == IDOK) {
 						int i = TaskList.size() - 1;
@@ -321,7 +321,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						}*/
 
 						ToggleUnsavedTitle(hwnd, false);
-						MessageBox(NULL, L"All checked items has been deleted", L"Information", MB_ICONINFORMATION | MB_OK);
+						MessageBox(NULL, _T("All checked items has been deleted"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 					}
 				}
 				break;
@@ -331,7 +331,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					lview = GetDlgItem(hwnd, LVIEW);
 					std::vector<int> tmp; //this is a vector of finished item index number
 
-					int confirm = MessageBox(NULL, L"All unchecked items is about to be deleted", L"Confirmation", MB_ICONQUESTION | MB_OKCANCEL);
+					int confirm = MessageBox(NULL, _T("All unchecked items is about to be deleted"), _T("Confirmation"), MB_ICONQUESTION | MB_OKCANCEL);
 					
 					
 					if (confirm == IDOK) {
@@ -346,7 +346,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						}
 
 						ToggleUnsavedTitle(hwnd, 0);
-						MessageBox(NULL, L"All unchecked items has been deleted", L"Information", MB_ICONINFORMATION | MB_OK);
+						MessageBox(NULL, _T("All unchecked items has been deleted"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 					} 
 			}
 				break;
@@ -355,7 +355,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				WriteTaskToFile(TaskList);
 
 				ToggleUnsavedTitle(hwnd, 1);
-				MessageBox(NULL, L"Changes saved!", L"Information", MB_ICONINFORMATION | MB_OK);
+				MessageBox(NULL, _T("Changes saved!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 				}
 				break;
 	

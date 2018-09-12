@@ -1,21 +1,21 @@
 #pragma once
 
+typedef struct {
+	//remember string inside struct cannot be modifiedable by just using = (this is to remind myself)
+	TCHAR name[256];
+	int status;
+} Task;
+
+bool InitColumn(HWND);
+
 //toggling the title 
 void ToggleUnsavedTitle(HWND hwnd, bool saved) {
-	wchar_t title[] = L"MyTodo (unsaved)";
+	TCHAR title[] = L"MyTodo (unsaved)";
 	if (!saved) SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)title);
 	else SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)WindowTitle);
 
 	isSaved = saved;
 }
-
-typedef struct {
-	//remember string inside struct cannot be modifiedable by just using = (this is to remind myself)
-	wchar_t name[256];
-	int status;
-} Task;
-
-BOOL InitColumn(HWND);
 
 HWND CreateListView(HWND parent, int id) {
 	INITCOMMONCONTROLSEX icex;
@@ -37,7 +37,7 @@ HWND CreateListView(HWND parent, int id) {
 	return lview;
 }
 
-BOOL InitColumn(HWND lview) {
+bool InitColumn(HWND lview) {
 	LVCOLUMN lvc;
 
 	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
@@ -51,24 +51,24 @@ BOOL InitColumn(HWND lview) {
 	lvc.pszText = L"Status";
 	ListView_InsertColumn(lview, 1, &lvc);
 
-	return TRUE;
+	return true;
 }
 
 //import task from file and insert it to the vector
-BOOL LoadTaskFromFile(std::vector<Task> *TaskList, HWND lview) {
+bool LoadTaskFromFile(std::vector<Task> *TaskList, HWND lview) {
 
 	FILE *file;
 	fopen_s(&file,"data/data.csv", "r");
-	wchar_t input[1024], *str, *buffer;
+	TCHAR input[1024], *str, *buffer;
 
 //check if file does not exist
-	if (GetFileAttributes(L"data/data.csv") == INVALID_FILE_ATTRIBUTES) {
-		CreateDirectory(L".//data", NULL); //create a new folder
+	if (GetFileAttributes(_T("data/data.csv")) == INVALID_FILE_ATTRIBUTES) {
+		CreateDirectory(_T(".//data"), NULL); //create a new folder
 
 	//create a new file name data.csv in data folder
-		HANDLE h = CreateFile(L".//data//data.csv", GENERIC_READ, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+		HANDLE h = CreateFile(_T(".//data//data.csv"), GENERIC_READ, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 		CloseHandle(h);
-		return 0;
+		return false;
 
 		/*
 		- this one is to write the data in the appdata/roaming directory
@@ -111,7 +111,7 @@ BOOL LoadTaskFromFile(std::vector<Task> *TaskList, HWND lview) {
 	}
 
 	fclose(file);
-	return 0;
+	return true;
 }
 
 //render task from the vector to the listview
@@ -130,7 +130,7 @@ void renderTask(std::vector<Task> TaskList, HWND lview) {
 
 		ListView_SetCheckState(lview, i, it->status);
 
-		(it->status) ? status = L"Finished" : status = L"Unfinished";
+		(it->status) ? status = _T("Finished") : status = _T("Unfinished");
 
 		lvi.iItem = i;
 		lvi.iSubItem = 1;
@@ -165,7 +165,7 @@ void ToggleTaskStatus(HWND lview, int iItem, int status) {
 	lvi.iItem = iItem;
 	lvi.iSubItem = 1;
 
-	(status) ? lvi.pszText = L"Finished" : lvi.pszText = L"Unfinished";
+	(status) ? lvi.pszText = _T("Finished") : lvi.pszText = _T("Unfinished");
 
 	ListView_SetItem(lview, &lvi);
 	HWND hwnd = GetParent(lview);
