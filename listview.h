@@ -1,7 +1,9 @@
 #pragma once
 
+static int TaskNameW = 330;
+static int TaskStatusW = 120;
 typedef struct {
-	//remember string inside struct cannot be modifiedable by just using = (this is to remind myself)
+	//remember string in c cannot be modifiedable by just using = (this is to remind myself)
 	TCHAR name[256];
 	int status;
 } Task;
@@ -147,30 +149,10 @@ void WriteTaskToFile(std::vector<Task> TaskList) {
 	FILE *File;
 	fopen_s(&File, "data/data.csv", "w+");
 
-	/*for (std::vector<Task>::iterator it = TaskList.begin(); it != TaskList.end(); ++it) {
-		fwprintf(File, L"%s;%d;\n", it->name, it->status);
-	}*/
-
 	for (std::vector<Task>::iterator it = TaskList.end()-1; it != TaskList.begin()-1; --it) {
 		fwprintf(File, L"%s;%d;\n", it->name, it->status);
 	}
  	fclose(File);
-}
-
-//toggle wether task finished or not
-void ToggleTaskStatus(HWND lview, int iItem, int status) {
-	LVITEM lvi;
-
-	lvi.mask = LVIF_TEXT;
-	lvi.iItem = iItem;
-	lvi.iSubItem = 1;
-
-	(status) ? lvi.pszText = _T("Finished") : lvi.pszText = _T("Unfinished");
-
-	ListView_SetItem(lview, &lvi);
-	HWND hwnd = GetParent(lview);
-	ToggleUnsavedTitle(hwnd, 0);
-
 }
 
 //processing the custom draw message
@@ -202,3 +184,79 @@ LRESULT ProcessCustomDraw(LPARAM lparam, std::vector<Task> TaskList) {
 		default: return CDRF_DODEFAULT;
 	}
 }
+
+//toggle wether task finished or not
+void ToggleTaskStatus(std::vector<Task> &TaskList, HWND lview, int iItem, int status) {
+	LVITEM lvi;
+
+	lvi.mask = LVIF_TEXT;
+	lvi.iItem = iItem;
+	lvi.iSubItem = 1;
+
+	TaskList[iItem].status = status;
+	(status) ? lvi.pszText = _T("Finished") : lvi.pszText = _T("Unfinished");
+
+	ListView_SetItem(lview, &lvi);
+}
+
+bool AddTask(std::vector<Task> &TaskList, HWND lview, TCHAR pszText[256]) {
+	LVITEM lvi;
+
+	//create a new Task class and insert it to the vector
+	Task newTask;
+	wcscpy_s(newTask.name, pszText);
+	newTask.status = 0; //status is absolutely unfinished 
+	TaskList.insert(TaskList.begin(), newTask);
+
+	int iItem = SendMessage(lview, LVM_GETITEMCOUNT, 0, 0); //get number of listview item
+	lvi.mask = LVIF_TEXT;
+	lvi.iItem = 0;
+	lvi.iSubItem = 0;
+	lvi.pszText = pszText;
+	ListView_InsertItem(lview, &lvi);
+
+	lvi.iSubItem = 1;
+	lvi.pszText = _T("Unfinished");
+	ListView_SetItem(lview, &lvi);
+
+		return true;
+}
+
+bool ProcessLabelEdit(std::vector<Task> &TaskList, int iIndex, HWND lview, LVITEM lvi) {
+	TCHAR text[256];
+	HWND hEdit = ListView_GetEditControl(lview); //get the item
+	GetWindowText(hEdit, text, sizeof(text)); //get item text
+	if (wcslen(text) == 0) return 0;
+
+	lvi.pszText = text;
+	lvi.iSubItem = 0;
+	SendMessage(lview, LVM_SETITEMTEXT, (WPARAM)iIndex, (LPARAM)&lvi); //set the item text
+
+	if (wcscmp(TaskList[iIndex].name, text) != 0) { //if there is changes
+		wcscpy_s(TaskList[iIndex].name, text); //copy the changes to the task name
+		return 1;
+	}
+	return 0;
+}
+
+bool DeleteTaskBasedOnStatus(std::vector<Task> &TaskList,HWND lview, int status) {
+	int i = TaskList.size() - 1;
+	//use reverse loop to avoid error when deleting later items	
+	for (std::vector<Task>::iterator it = TaskList.end() - 1; it != TaskList.begin() - 1; it--) {
+		if (it->status == status) {
+		//TaskList.erase(TaskList.begin() + i);
+			TaskList.erase(it);
+			SendMessage(lview, LVM_DELETEITEM, i, 0);
+		}
+		i--;
+	}
+
+	//other loop method
+		/*for (int i = TaskList.size()-1; i >= 0; i--) {
+			if (TaskList[i].status == status) {
+				TaskList.erase(TaskList.begin() + i);
+				SendMessage(lview, LVM_DELETEITEM, i, 0);
+			}
+		}*/
+	return status + 1;
+};

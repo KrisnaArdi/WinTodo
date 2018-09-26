@@ -15,6 +15,7 @@
 int btnW = 100;
 int btnH = 24;
 int editH = 30;
+static int AddBtnW = btnW;
 int iSelect = 0;
 
 wchar_t WindowTitle[] = L"WinTodo";

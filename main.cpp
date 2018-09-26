@@ -22,7 +22,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UIN
 
 	//if enter is pressed
 	if (msg == WM_CHAR && wparam == VK_RETURN) {
-		SendMessage(AddBtn, BM_CLICK, 0, 0); //trigger the add button click event
+		 SendMessage(AddBtn, BM_CLICK, 0, 0); //trigger the add button click event
 		return 0; //this will prevent annoying beeping sound when enter is pressed
 	}
 
@@ -35,6 +35,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UIN
 //list view procedure
 LRESULT CALLBACK LViewProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT_PTR Subclass, DWORD_PTR refdata) {
 	HWND parent = GetParent(hwnd); //get the main hwnd
+
 	if (msg == WM_CHAR && wparam == VK_DELETE) {
 		SendMessage(parent, WM_COMMAND, ID_DEL, 0);
 		return 0;
@@ -96,8 +97,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			lview = CreateListView(hwnd, LVIEW);
 
 			edit = CreateWindow(_T("EDIT"), _T(""),
-				WS_VISIBLE | WS_CHILD | WS_BORDER,
-				0, 0, rc.right - 102, editH,
+				WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
+				0, 0, rc.right - btnW, editH,
 				hwnd, (HMENU)ID_INPUT, NULL, NULL);
 
 			AddBtn = CreateWindow(_T("BUTTON"), _T("Add item"),
@@ -121,6 +122,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
 				(3 * btnW), btnY, btnW, btnH, hwnd, (HMENU)ID_DELUNFIN, NULL, NULL);
 
+			parseOptionFile(hwnd);
+
 		/*Setting Font */
 			//note : i don't know where i should put this code.
 			HWND buttons[4] = {delBtn, delAllBtn, delFin, delUnFin }; //all button control
@@ -139,8 +142,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		//subclassing dialog to its procedure
 			SetWindowSubclass(lview, LViewProc, 0, 0);
 			SetWindowSubclass(edit, EditProc, 0, 0); 
-
-			parseOptionFile(hwnd);
 		}
 		break;
 
@@ -159,47 +160,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					if (((LPNMHDR)lparam)->code == NM_DBLCLK) {
 						int iIndex = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 						if (iIndex == -1) break;
-						SendMessage(lview, LVM_EDITLABEL, (WPARAM)iIndex, NULL); //call edit label
-						
+						SendMessage(lview, LVM_EDITLABEL, (WPARAM)iIndex, NULL); //call edit label			
 					}
 
 				//processing the end of label edit
 					if (((LPNMHDR)lparam)->code == LVN_ENDLABELEDIT) {
-						
-						int iIndex;
-						TCHAR text[256];
-						HWND hEdit = ListView_GetEditControl(lview); //get the item
-						iIndex = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+						int iIndex = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 						if (iIndex == -1) break;
 
 						if ((TCHAR)mesg.wParam == 0x1b) return 0; //if user press esc then cancel change
-				
-						GetWindowText(hEdit, text, sizeof(text)); //get item text
-						if (wcslen(text) == 0) return 0; //if the string empty then cancel change wcslen is to check wstring length
-						
-						lvi.pszText = text;
-						lvi.iSubItem = 0;
-						SendMessage(lview, LVM_SETITEMTEXT, (WPARAM)iIndex, (LPARAM)&lvi); //set the item text
-						
-						if (wcscmp(TaskList[iIndex].name, text) != 0) {
-							ToggleUnsavedTitle(hwnd, 0);
-						}
-						wcscpy_s(TaskList[iIndex].name, text);	
+						int process = ProcessLabelEdit(TaskList, iIndex, lview, lvi);
+						if(process)ToggleUnsavedTitle(hwnd, 0);
 				}
 
-				//this is to process the checkbox message
+				//processing checkbox message
 					if(pnm->uChanged & LVIF_STATE) {
 						switch (pnm->uNewState) {
 							case INDEXTOSTATEIMAGEMASK(2): {// item was checked
-
-								TaskList[pnm->iItem].status = 1; //change status in the vector
-
-								ToggleTaskStatus(lview, pnm->iItem, 1); //changing the text in status column
+								ToggleTaskStatus(TaskList, lview, pnm->iItem, 1); //changing the text in status column
+								ToggleUnsavedTitle(hwnd, 0);
 							}
 							break;
+
 							case INDEXTOSTATEIMAGEMASK(1): { //item was unchecked
-								TaskList[pnm->iItem].status = 0;
-								ToggleTaskStatus(lview, pnm->iItem, 0);	
+								ToggleTaskStatus(TaskList, lview, pnm->iItem, 0);	
+								ToggleUnsavedTitle(hwnd, 0);
 							}
 							break;
 						}
@@ -217,37 +202,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					edit = GetDlgItem(hwnd, ID_INPUT);
 					lview = GetDlgItem(hwnd, LVIEW);
 					TCHAR pszText[256];
-					int iItem;
 			
-					GetDlgItemText(hwnd, ID_INPUT, pszText, 256); //get the text from input
-			
+					GetDlgItemText(hwnd, ID_INPUT, pszText, 256); //get the text from input		
+
 				//return an error if the input is blank
 					if (pszText[0] == 0) {
 					MessageBox(NULL, _T("You cannot create an empty task!"), _T("Information"), MB_ICONERROR | MB_OK);
 					break;
 				}
 
-				//create a new Task class and insert it to the vector
-					Task newTask;
-					wcscpy_s(newTask.name, pszText);
-					newTask.status = 0; //status is absolutely unfinished 
-					TaskList.insert(TaskList.begin(), newTask);
-
-					iItem = SendMessage(lview, LVM_GETITEMCOUNT, 0, 0); //get number of listview item
-					lvi.mask = LVIF_TEXT;
-					lvi.iItem = 0;
-					lvi.iSubItem = 0;
-					lvi.pszText = pszText;
-					ListView_InsertItem(lview, &lvi);
-
-					lvi.iSubItem = 1;
-					lvi.pszText = _T("Unfinished");
-					ListView_SetItem(lview, &lvi);
-	
-					SetDlgItemText(hwnd, ID_INPUT, _T(""));
-					SetFocus(edit); //focus to edit control
+				//create a new task
+					AddTask(TaskList, lview, pszText);
 
 					ToggleUnsavedTitle(hwnd, 0); //toggling the title 
+					SetDlgItemText(hwnd, ID_INPUT, _T(""));
+					SetFocus(edit); //focus to edit control
 				}
 				break;	
 
@@ -259,12 +228,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					if (iSelect == -1) MessageBox(NULL, _T("Select item first before delete it by clicking the item!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 				//if an item is not selected	
 					else {
-						if (isMenuChecked(hmenu, ID_CONFIRMONDELETE)) {
+						if (isMenuChecked(hmenu, ID_CONFIRMONDELETE)) { //confirmation box
 							int confirm = MessageBox(NULL, _T("Delete this task?"), _T("Confirmation"), MB_ICONQUESTION | MB_YESNO);
 							if (confirm == IDNO) break;
 						}
-						SendMessage(lview, LVM_DELETEITEM, iSelect, 0); //delete the task from the listview
-						TaskList.erase(TaskList.begin() + iSelect); //delete the task from the vector
+						while (iSelect != -1) {
+							SendMessage(lview, LVM_DELETEITEM, iSelect, 0); //delete the task from the listview
+							TaskList.erase(TaskList.begin() + iSelect); //delete the task from the vector
+							iSelect = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+						}
 						ToggleUnsavedTitle(hwnd, 0); //toggling the title
 					}
 				}
@@ -279,14 +251,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						break;
 					}
 			
-				//make a convirmation box
+				//make a confirmation box
 					int confirm = MessageBox(NULL, _T("You are about to delete all task items, are you sure?"), _T("Confirmation"), MB_ICONQUESTION | MB_YESNO);
 				//user press yes
 					if (confirm == IDYES) {
 						SendMessage(lview, LVM_DELETEALLITEMS, 0, 0);
 						TaskList.clear();
 						MessageBox(NULL, _T("All items has been deleted"), _T("Information"), MB_ICONINFORMATION | MB_OK);
-
 						ToggleUnsavedTitle(hwnd, 0); 
 					}
 				//user press no
@@ -296,30 +267,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 				case ID_DELFIN: {
 					lview = GetDlgItem(hwnd, LVIEW);
-					std::vector<int> tmp; //this is a vector of finished item index number
 			
 					int confirm = MessageBox(NULL, _T("All checked items is about to be deleted"), _T("Confirmation"), MB_ICONQUESTION |MB_OKCANCEL);
 					
 					if (confirm == IDOK) {
-						int i = TaskList.size() - 1;
-					//use reverse loop to avoid error when deleting later items	
-						for (std::vector<Task>::iterator it = TaskList.end()-1; it != TaskList.begin()-1; it--) { 
-							if (it->status) { //if task finished
-							//TaskList.erase(TaskList.begin() + i);
-								TaskList.erase(it);
-								SendMessage(lview, LVM_DELETEITEM, i, 0);
-							}
-							i--;
-						} 
-
-					//other loop method
-						/*for (int i = TaskList.size()-1; i >= 0; i--) {
-							if (TaskList[i].status) {
-								TaskList.erase(TaskList.begin() + i);
-								SendMessage(lview, LVM_DELETEITEM, i, 0);
-							}
-						}*/
-
+						DeleteTaskBasedOnStatus(TaskList, lview, true);
 						ToggleUnsavedTitle(hwnd, false);
 						MessageBox(NULL, _T("All checked items has been deleted"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 					}
@@ -327,24 +279,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				break;
 	
 				case ID_DELUNFIN: {
-				//this one has only few change compared to delfin
 					lview = GetDlgItem(hwnd, LVIEW);
-					std::vector<int> tmp; //this is a vector of finished item index number
 
 					int confirm = MessageBox(NULL, _T("All unchecked items is about to be deleted"), _T("Confirmation"), MB_ICONQUESTION | MB_OKCANCEL);
-					
-					
 					if (confirm == IDOK) {
-						int i = TaskList.size() - 1;
-
-						for (std::vector<Task>::iterator it = TaskList.end()-1; it != TaskList.begin()-1; --it) {
-							if(it->status == 0) { //if task unfinished
-								TaskList.erase(it);
-								SendMessage(lview, LVM_DELETEITEM, i, 0);
-							}
-							--i;
-						}
-
+						DeleteTaskBasedOnStatus(TaskList, lview, false);
 						ToggleUnsavedTitle(hwnd, 0);
 						MessageBox(NULL, _T("All unchecked items has been deleted"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 					} 
@@ -376,6 +315,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					if(isMenuChecked(hmenu, ID_CONFIRMONDELETE)) CheckMenuItem(hmenu, ID_CONFIRMONDELETE, MF_UNCHECKED);
 					else  CheckMenuItem(hmenu, ID_CONFIRMONDELETE, MF_CHECKED);
 				}break;
+
+				case ID_SHOWADDBUTTON: {
+					HWND AddBtn = GetDlgItem(hwnd, ID_ADD);
+					HWND edit = GetDlgItem(hwnd, ID_INPUT);
+					HMENU hmenu = GetMenu(hwnd);
+ 
+					RECT rc;
+					GetClientRect(hwnd, &rc);
+					int width = rc.right;
+
+					if (isMenuChecked(hmenu, ID_SHOWADDBUTTON)) { 
+						CheckMenuItem(hmenu, ID_SHOWADDBUTTON, MF_UNCHECKED);
+						AddBtnW = 0;
+						ShowWindow(AddBtn, SW_HIDE);
+					}
+					else { 
+						CheckMenuItem(hmenu, ID_SHOWADDBUTTON, MF_CHECKED);
+						ShowWindow(AddBtn, SW_RESTORE);
+						AddBtnW = btnW;
+					}
+
+					SetWindowPos(edit, 0, 0, 0, width - AddBtnW, editH, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+				}break;
 				
 		}
 	}
@@ -393,8 +355,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			GetClientRect(hwnd, &rc); //getting the client of the hwnd
 			int btnY = rc.bottom - btnH;
 
-			SetWindowPos(edit, 0, 0, 0, rc.right - btnW, editH, SWP_NOZORDER); //resize the input
-			SetWindowPos(AddBtn, 0, rc.right - btnW, 0, btnW, editH, SWP_NOZORDER | SWP_NOSIZE); //resize the button
+			SetWindowPos(AddBtn, 0, rc.right - btnW, 0, AddBtnW, editH, SWP_NOZORDER | SWP_NOSIZE); //resize the button
+			SetWindowPos(edit, 0, 0, 0, rc.right - AddBtnW, editH, SWP_NOZORDER); //resize the input
 			SetWindowPos(lview, 0, 0, editH, rc.right, rc.bottom - (btnH+editH), SWP_NOZORDER); //resize the listview
 			SetWindowPos(delBtn, 0, 0, btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //resize the delete button
 			SetWindowPos(delAllBtn, 0, btnW, btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //resize the delete all button

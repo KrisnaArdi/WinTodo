@@ -11,14 +11,17 @@
 #define ID_FILE_SAVECHANGES             40002
 #define ID_FILE_EXIT                    40003
 #define ID_HELP_ABOUT                   40018
-#define ID_CONFIRMONDELETE				40019
+#define ID_CONFIRMONDELETE              40019
+#define ID_OPTIONS_SHOWADDBUTTON        40020
+#define ID_SHOWADDBUTTON                40021
+#define ID_ACCELERATOR40024             40024
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        124
-#define _APS_NEXT_COMMAND_VALUE         40020
+#define _APS_NEXT_COMMAND_VALUE         40027
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
