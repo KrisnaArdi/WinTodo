@@ -222,7 +222,8 @@ bool AddTask(std::vector<Task> &TaskList, HWND lview, TCHAR pszText[256]) {
 		return true;
 }
 
-bool ProcessLabelEdit(std::vector<Task> &TaskList, int iIndex, HWND lview, LVITEM lvi) {
+bool ProcessLabelEdit(std::vector<Task> &TaskList, int iIndex, HWND lview) {
+	LVITEM lvi;
 	TCHAR text[256];
 	HWND hEdit = ListView_GetEditControl(lview); //get the item
 	GetWindowText(hEdit, text, sizeof(text)); //get item text

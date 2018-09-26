@@ -67,10 +67,8 @@ LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 	HWND  edit, AddBtn, lview, delBtn, delAllBtn, delFin, delUnFin;
-	LVITEM lvi;
 	RECT rc;
 	
-
 	switch (msg) {
 		case WM_CLOSE: {
 			writeOptionToFile(hwnd);
@@ -169,7 +167,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						if (iIndex == -1) break;
 
 						if ((TCHAR)mesg.wParam == 0x1b) return 0; //if user press esc then cancel change
-						int process = ProcessLabelEdit(TaskList, iIndex, lview, lvi);
+						int process = ProcessLabelEdit(TaskList, iIndex, lview);
 						if(process)ToggleUnsavedTitle(hwnd, 0);
 				}
 
