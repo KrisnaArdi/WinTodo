@@ -32,7 +32,7 @@ HWND CreateListView(HWND parent, int id) {
 		0, editH, rc.right - rc.left,
 		rc.bottom - (btnH + editH), parent, (HMENU)id, NULL, NULL);
 
-	ListView_SetExtendedListViewStyle(lview, LVS_EX_FULLROWSELECT|LVS_EX_CHECKBOXES);
+	ListView_SetExtendedListViewStyle(lview, LVS_EX_INFOTIP|LVS_EX_FULLROWSELECT|LVS_EX_CHECKBOXES);
 
 	InitColumn(lview);
 

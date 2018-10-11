@@ -181,6 +181,9 @@
   <ItemGroup>
     <Image Include="1.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="resource1.hm" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

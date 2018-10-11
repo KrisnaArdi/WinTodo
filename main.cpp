@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <vector>
 #include "resource1.h"
 #include "resource.h"
@@ -14,6 +15,33 @@
 TCHAR ClassName[] = _T("WindowClass");
 std::vector<Task> TaskList;
  MSG mesg; //window message
+ NOTIFYICONDATA iconData;
+ HWND hwnd;
+ HMENU hmenu;
+
+ void minimize() { //minimize window
+	 Shell_NotifyIcon(NIM_ADD, &iconData);
+	 ShowWindow(hwnd, SW_HIDE);
+ }
+
+ void restore() { //restore window
+	 Shell_NotifyIcon(NIM_DELETE, &iconData);
+	 ShowWindow(hwnd, SW_SHOW);
+ }
+
+ void initNotifyIconData() { //initializing the shell notification
+	 memset(&iconData, 0, sizeof(iconData));
+
+	 iconData.cbSize = sizeof(NOTIFYICONDATA);
+	 iconData.hWnd = hwnd;
+	 iconData.uID = ID_TRAY_APP_ICON;
+	 iconData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	 iconData.uCallbackMessage = WM_TRAYICON;
+	 iconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
+
+	 //setting the tooltip text
+	 wcscpy(iconData.szTip, TEXT("WinTodo"));
+ }
 
 //the editbox procedure
 LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT_PTR Subclass, DWORD_PTR refdata) {
@@ -23,7 +51,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UIN
 	//if enter is pressed
 	if (msg == WM_CHAR && wparam == VK_RETURN) {
 		 SendMessage(AddBtn, BM_CLICK, 0, 0); //trigger the add button click event
-		return 0; //this will prevent annoying beeping sound when enter is pressed
+		return 0; 
 	}
 
 	LRESULT lres = DefSubclassProc(hwnd, msg, wparam, lparam);
@@ -34,7 +62,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UIN
 
 //list view procedure
 LRESULT CALLBACK LViewProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT_PTR Subclass, DWORD_PTR refdata) {
-	HWND parent = GetParent(hwnd); //get the main hwnd
+	HWND parent = GetParent(hwnd); //get the main window
 
 	if (msg == WM_CHAR && wparam == VK_DELETE) {
 		SendMessage(parent, WM_COMMAND, ID_DEL, 0);
@@ -46,11 +74,14 @@ LRESULT CALLBACK LViewProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UI
 	return lres;
 }
 
-//about dialog procedure, check the dialog in the resource file
+//about dialog procedure, also used for help check the dialog in the resource file
 LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	switch (msg) {
-	case WM_INITDIALOG :
+	case WM_INITDIALOG: {
+		HWND HelpEdit = GetDlgItem(hwnd, IDC_EDIT1);
+		SetWindowText(HelpEdit, HelpText);
 		return TRUE;
+	}
 
 	case WM_COMMAND :
 		switch (LOWORD(wparam)) {
@@ -64,6 +95,7 @@ LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	return TRUE;
 }
 
+/////  Main Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 	HWND  edit, AddBtn, lview, delBtn, delAllBtn, delFin, delUnFin;
@@ -91,8 +123,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		case WM_CREATE: {
 			GetClientRect(hwnd, &rc);
 			int btnY = rc.bottom - btnH;
-
 			lview = CreateListView(hwnd, LVIEW);
+
+			hmenu = CreatePopupMenu(); //create a popup menu
+			AppendMenu(hmenu, MF_STRING, ID_TRAY_MENU_EXIT, TEXT("Exit")); //append menu item
 
 			edit = CreateWindow(_T("EDIT"), _T(""),
 				WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
@@ -100,7 +134,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				hwnd, (HMENU)ID_INPUT, NULL, NULL);
 
 			AddBtn = CreateWindow(_T("BUTTON"), _T("Add item"),
-				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_USERBUTTON,
+				WS_VISIBLE | WS_CHILD |BS_FLAT,
 				rc.right - btnW, 0, btnW, editH,
 				hwnd, (HMENU)ID_ADD, NULL, NULL);
 
@@ -136,7 +170,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			SendMessage(edit, EM_SETCUEBANNER, 0, LPARAM(_T("Add a new item here"))); //setting placeholder for edit 
 			LoadTaskFromFile(&TaskList, lview); //loading task from file
 			renderTask(TaskList, lview); //render the task
-			
+		
 		//subclassing dialog to its procedure
 			SetWindowSubclass(lview, LViewProc, 0, 0);
 			SetWindowSubclass(edit, EditProc, 0, 0); 
@@ -164,7 +198,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				//processing the end of label edit
 					if (((LPNMHDR)lparam)->code == LVN_ENDLABELEDIT) {
 						int iIndex = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-						if (iIndex == -1) break;
+						if (SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_FOCUSED) == -1) break;
 
 						if ((TCHAR)mesg.wParam == 0x1b) return 0; //if user press esc then cancel change
 						int process = ProcessLabelEdit(TaskList, iIndex, lview);
@@ -295,7 +329,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				MessageBox(NULL, _T("Changes saved!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 				}
 				break;
-	
+				
+				case ID_FILE_MINIMIZETOTRAY: {
+					minimize();
+				}
+				break;
+
 				case ID_FILE_EXIT: {
 				PostMessage(hwnd, WM_CLOSE, 0, 0);
 				}
@@ -307,6 +346,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						MAKEINTRESOURCE(IDD_ABOUT), hwnd, (DLGPROC)AboutProc);
 				}
 				break;
+
+				case ID_HELP_HELP: {
+					DialogBox(GetModuleHandle(NULL),
+						MAKEINTRESOURCE(IDD_HELP), hwnd, (DLGPROC)AboutProc);
+				}
 
 				case ID_CONFIRMONDELETE : {
 					HMENU hmenu = GetMenu(hwnd);
@@ -363,6 +407,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		}
 		break;
 
+		case WM_TRAYICON: {
+			switch (lparam) {
+			case WM_LBUTTONUP: restore(); //restore window on left click
+				break;
+
+			case WM_RBUTTONDOWN: {
+				POINT curPoint;
+				GetCursorPos(&curPoint);
+
+				// should SetForegroundWindow according
+				 // to original poster so the popup shows on top
+				SetForegroundWindow(hwnd);
+
+				UINT clicked = TrackPopupMenu(
+					hmenu,
+					TPM_RETURNCMD | TPM_NONOTIFY, // don't send me WM_COMMAND messages about this window, instead return the identifier of the clicked menu item
+					curPoint.x,
+					curPoint.y,
+					0, hwnd, NULL);
+
+
+				if (clicked == ID_TRAY_MENU_EXIT) { //click the exit menu in the popup
+					PostQuitMessage(0);
+				}
+				break;
+			}
+			}
+			break;
+		}
+
 		default: return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
 	return 0;
@@ -370,7 +444,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 int WINAPI WinMain(HINSTANCE hins, HINSTANCE hprev, LPSTR lpcmd, int ncmd) {
 	WNDCLASSEX wc;
-	HWND hwnd;
 	BOOL bRet;
 	HACCEL haccel;
 	haccel = LoadAccelerators(hins, MAKEINTRESOURCE(IDR_ACCELERATOR1)); //binding windows with an accelerator
@@ -402,6 +475,9 @@ int WINAPI WinMain(HINSTANCE hins, HINSTANCE hprev, LPSTR lpcmd, int ncmd) {
 		return 0;
 	}
 
+	// Initialize the NOTIFYICONDATA structure once
+	initNotifyIconData();
+
 	while (bRet = GetMessage(&mesg, NULL, 0, 0) > 0) {
 
 		if (bRet == -1) {
@@ -417,6 +493,12 @@ int WINAPI WinMain(HINSTANCE hins, HINSTANCE hprev, LPSTR lpcmd, int ncmd) {
 		}
 
 		
+	}
+
+	// Once you get the quit message, before exiting the app,
+// clean up and remove the tray icon
+	if (!IsWindowVisible(hwnd)) {
+		Shell_NotifyIcon(NIM_DELETE, &iconData);
 	}
 
 	return mesg.wParam;

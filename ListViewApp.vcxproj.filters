@@ -43,4 +43,9 @@
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="resource1.hm">
+      <Filter>Header Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
