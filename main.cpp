@@ -10,7 +10,8 @@
 #include "options.h"
 
 //using visual styles
-#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version = '6.0.0.0' processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"")
+//visual styles has been added through  manifest.xml
+//#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version = '6.0.0.0' processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"")
 
 TCHAR ClassName[] = _T("WindowClass");
 std::vector<Task> TaskList;
@@ -40,7 +41,7 @@ std::vector<Task> TaskList;
 	 iconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
 
 	 //setting the tooltip text
-	 wcscpy(iconData.szTip, TEXT("WinTodo"));
+	 wcscpy_s(iconData.szTip, TEXT("WinTodo"));
  }
 
 //the editbox procedure
@@ -98,7 +99,7 @@ LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 /////  Main Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
-	HWND  edit, AddBtn, lview, delBtn, delAllBtn, delFin, delUnFin;
+	HWND  edit, AddBtn, lview, TBar;
 	RECT rc;
 	
 	switch (msg) {
@@ -112,58 +113,84 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					WriteTaskToFile(TaskList); //saving changes before closing files
 					PostQuitMessage(0);
 				}
-
 				else if (confirm == IDNO)  PostQuitMessage(0);
 				else if (confirm == IDCANCEL)  break;
 			}
-			
 		}
 		break;
 
 		case WM_CREATE: {
 			GetClientRect(hwnd, &rc);
 			int btnY = rc.bottom - btnH;
-			lview = CreateListView(hwnd, LVIEW);
 
 			hmenu = CreatePopupMenu(); //create a popup menu
 			AppendMenu(hmenu, MF_STRING, ID_TRAY_MENU_EXIT, TEXT("Exit")); //append menu item
 
+			lview = CreateListView(hwnd, LVIEW);
+			
 			edit = CreateWindow(_T("EDIT"), _T(""),
 				WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
-				0, 0, rc.right - btnW, editH,
+				0, 0, rc.right - AddBtnW, editH,
 				hwnd, (HMENU)ID_INPUT, NULL, NULL);
 
-			AddBtn = CreateWindow(_T("BUTTON"), _T("Add item"),
-				WS_VISIBLE | WS_CHILD |BS_FLAT,
-				rc.right - btnW, 0, btnW, editH,
+			AddBtn = CreateWindow(_T("BUTTON"), _T(""),
+				WS_VISIBLE |WS_BORDER| WS_CHILD |BS_OWNERDRAW,
+				rc.right - AddBtnW, 0, AddBtnW+1, editH,
 				hwnd, (HMENU)ID_ADD, NULL, NULL);
+			
+		/* ------ Creating Toolbar -------------------------------- */
+			TBBUTTON tbb[7];
+			TBar = CreateWindow(TOOLBARCLASSNAME, NULL, WS_VISIBLE | WS_CHILD | TBSTYLE_LIST | TBSTYLE_TOOLTIPS,
+				0, 0, 0, 0,
+				hwnd, (HMENU)ID_TBAR, GetModuleHandle(NULL), NULL);
+			SendMessage(TBar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-			delBtn = CreateWindow(_T("Button"), _T("Delete"),
-				WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-				0, btnY, btnW, btnH, hwnd, (HMENU)ID_DEL, NULL, NULL);
+			HIMAGELIST imgList = ImageList_Create(20, 20, ILC_COLOR32, 1, 5);
+			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELETE)));
+			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELUNCHECK)));
+			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELFIN)));
+			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELALL)));
+			SendMessage(TBar, TB_SETIMAGELIST, 0, (LPARAM)imgList);		
+			ZeroMemory(tbb, sizeof(tbb));
 
-			delAllBtn = CreateWindow(_T("Button"), _T("Delete all"),
-				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-				btnW, btnY, btnW, btnH, hwnd, (HMENU)ID_DELALL, NULL, NULL);
+			tbb[0].iBitmap = 0;
+			tbb[0].idCommand = ID_DEL;
+			tbb[0].fsState = TBSTATE_ENABLED;
+			tbb[0].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
 
-			delFin = CreateWindow(_T("Button"), _T("Delete checked"),
-				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-				(2 * btnW), btnY, btnW, btnH, hwnd, (HMENU)ID_DELFIN, NULL, NULL);
+			tbb[1].fsStyle = BTNS_SEP; //separator between 2 button
+			tbb[1].iBitmap = 8;
 
-			delUnFin = CreateWindow(_T("Button"), _T("Delete unchecked"),
-				WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-				(3 * btnW), btnY, btnW, btnH, hwnd, (HMENU)ID_DELUNFIN, NULL, NULL);
+			tbb[2].iBitmap = 1;
+			tbb[2].idCommand = ID_DELUNFIN;
+			tbb[2].fsState = TBSTATE_ENABLED;
+			tbb[2].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+
+			tbb[3].fsStyle = BTNS_SEP;
+			tbb[3].iBitmap = 8;
+
+			tbb[4].iBitmap = 2;
+			tbb[4].idCommand = ID_DELFIN;
+			tbb[4].fsState = TBSTATE_ENABLED;
+			tbb[4].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+
+			tbb[5].fsStyle = BTNS_SEP;
+			tbb[5].iBitmap = 8;
+
+			tbb[6].iBitmap = 3;
+			tbb[6].idCommand = ID_DELALL;
+			tbb[6].fsState = TBSTATE_ENABLED;
+			tbb[6].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+			
+			SendMessage(TBar, TB_SETMAXTEXTROWS, 0, 0);
+			SendMessage(TBar, TB_ADDBUTTONS, 7, (LPARAM)&tbb);
+			SendMessage(TBar, TB_SETEXTENDEDSTYLE, 0, (LPARAM)TBSTYLE_EX_MIXEDBUTTONS);
+			SendMessage(TBar, TB_AUTOSIZE, 0, 0);
+			ShowWindow(TBar, SW_SHOW);
 
 			parseOptionFile(hwnd);
 
-		/*Setting Font */
-			//note : i don't know where i should put this code.
-			HWND buttons[4] = {delBtn, delAllBtn, delFin, delUnFin }; //all button control
-			for (int i = 0; i < 4; ++i) { //set font for all button control
-				SendMessage(buttons[i], WM_SETFONT, (WPARAM)BtnFont, TRUE);
-			}
-
-			SendMessage(AddBtn, WM_SETFONT, (WPARAM)AddBtnFont, TRUE);
+		/*---- Setting Font ---------------------------*/
 			SendMessage(edit, WM_SETFONT, (WPARAM)EditFont, TRUE); //edit font
 			SendMessage(lview, WM_SETFONT, (WPARAM)LviewFont, TRUE); //listview font
 
@@ -224,6 +251,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					}
 				}
 			break;
+			}
+
+		//tooltip
+			if (((LPNMHDR)lparam)->code == TTN_GETDISPINFO) {
+				LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lparam;
+				lpttt->hinst = GetModuleHandle(NULL);
+				UINT_PTR idButton = lpttt->hdr.idFrom;
+				switch (idButton) {
+				case ID_DEL: {
+					lpttt->lpszText = _TEXT("Delete task");
+					break;
+				}
+				case ID_DELUNFIN: {
+					lpttt->lpszText = _TEXT("Delete unchecked tasks");
+					break;
+				}
+				case ID_DELFIN: {
+					lpttt->lpszText = _TEXT("Delete checked tasks");
+					break;
+				}
+				case ID_DELALL: {
+					lpttt->lpszText = _TEXT("Delete all tasks");
+					break;
+				}
+				}
 			}
 		}
 		break;
@@ -374,8 +426,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					}
 					else { 
 						CheckMenuItem(hmenu, ID_SHOWADDBUTTON, MF_CHECKED);
-						ShowWindow(AddBtn, SW_RESTORE);
 						AddBtnW = btnW;
+						ShowWindow(AddBtn, SW_RESTORE);
 					}
 
 					SetWindowPos(edit, 0, 0, 0, width - AddBtnW, editH, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -385,25 +437,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	}
 		break;
 
+		case WM_DRAWITEM: {
+			switch ((UINT)wparam) {
+			case ID_ADD: {
+				LPDRAWITEMSTRUCT lpdis = (DRAWITEMSTRUCT*)lparam;
+				int IconW = 24;
+				int IconH = 24;
+				HICON hIcon = (HICON)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICONADD));
+				RECT rc = lpdis->rcItem;
+				SetBkColor(lpdis->hDC, COLOR_WINDOW);
+				
+				if (lpdis->itemState & ODS_SELECTED) {
+					FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)COLOR_WINDOW);
+					DrawIconEx(lpdis->hDC,
+						((AddBtnW - IconW) / 2)+1,
+						((AddBtnW - IconH) / 2)+1,
+						(HICON)hIcon,
+						24, 24, 0, NULL, DI_NORMAL);
+				}
+				else {
+					FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)COLOR_WINDOW);
+					DrawIconEx(lpdis->hDC,
+						(AddBtnW - IconW) / 2,
+						(AddBtnW - IconH) / 2,
+						(HICON)hIcon,
+						24, 24, 0, NULL, DI_NORMAL);
+				}
+				DrawEdge(lpdis->hDC, &lpdis->rcItem,
+					(lpdis->itemState & ODS_SELECTED ? EDGE_SUNKEN : EDGE_RAISED), //chek the item state of the button and set the edge according to the state
+					BF_RECT);
+				return TRUE;
+			}		
+			}
+		}break;
+
 		case WM_SIZE: {
 			edit = GetDlgItem(hwnd, ID_INPUT);
 			AddBtn = GetDlgItem(hwnd, ID_ADD);
 			lview = GetDlgItem(hwnd, LVIEW);
-			delBtn = GetDlgItem(hwnd, ID_DEL);
-			delAllBtn = GetDlgItem(hwnd, ID_DELALL);
-			delFin = GetDlgItem(hwnd, ID_DELFIN);
-			delUnFin = GetDlgItem(hwnd, ID_DELUNFIN);
-
+			TBar = GetDlgItem(hwnd, ID_TBAR);
+			
+			SendMessage(TBar, TB_AUTOSIZE, 0, 0);
 			GetClientRect(hwnd, &rc); //getting the client of the hwnd
-			int btnY = rc.bottom - btnH;
+			int btnY = rc.bottom - 36;
 
-			SetWindowPos(AddBtn, 0, rc.right - btnW, 0, AddBtnW, editH, SWP_NOZORDER | SWP_NOSIZE); //resize the button
-			SetWindowPos(edit, 0, 0, 0, rc.right - AddBtnW, editH, SWP_NOZORDER); //resize the input
-			SetWindowPos(lview, 0, 0, editH, rc.right, rc.bottom - (btnH+editH), SWP_NOZORDER); //resize the listview
-			SetWindowPos(delBtn, 0, 0, btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //resize the delete button
-			SetWindowPos(delAllBtn, 0, btnW, btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //resize the delete all button
-			SetWindowPos(delFin, 0, (2*btnW), btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //delete finished button
-			SetWindowPos(delUnFin, 0, (3 * btnW), btnY, btnW, btnH, SWP_NOZORDER | SWP_NOSIZE); //delete unfinished button	
+			SetWindowPos(AddBtn, 0, rc.right - AddBtnW, TBarH, AddBtnW, editH, SWP_NOZORDER | SWP_NOSIZE); //repos the button
+			SetWindowPos(edit, 0, 0, TBarH, rc.right - AddBtnW, editH, SWP_NOZORDER); //repos the input
+			SetWindowPos(TBar, 0, 4, 0, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+			SetWindowPos(lview, 0, 0, TBarH+editH, rc.right, rc.bottom - (35+editH), SWP_NOZORDER); //repos the listview
 		}
 		break;
 
@@ -485,14 +566,11 @@ int WINAPI WinMain(HINSTANCE hins, HINSTANCE hprev, LPSTR lpcmd, int ncmd) {
 		}
 
 		else {
-			
 			if (!TranslateAccelerator(hwnd, haccel, &mesg)) {
 				TranslateMessage(&mesg);
 				DispatchMessage(&mesg);
 			}
 		}
-
-		
 	}
 
 	// Once you get the quit message, before exiting the app,

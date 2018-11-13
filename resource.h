@@ -11,31 +11,30 @@
 #define ID_DELUNFIN		205
 
 #define ID_STATUSBAR	1001
+#define ID_TBAR			1002
+#define ID_ADDTBAR		1003
+#define IDB_TOOLBITMAP	301
 
 #define ID_TRAY_APP_ICON 2002
 #define ID_TRAY_MENU_EXIT 201
 #define WM_TRAYICON (WM_USER+1)
 
-int btnW = 100;
-int btnH = 24;
-int editH = 30;
-static int AddBtnW = btnW;
+int btnW = 32;
+int btnH = 32;
+int editH = 32;
+int TBarH = 32;
+static int AddBtnW = 32;
 int iSelect = 0;
 
 TCHAR WindowTitle[] = L"WinTodo";
 static bool isSaved = true;
 
-HFONT BtnFont = CreateFont(14, 0, 0, 0,
+/*HFONT BtnFont = CreateFont(14, 0, 0, 0,
 	FW_BLACK, 0, 0, 0, ANSI_CHARSET, 
 	OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-	DEFAULT_PITCH | FF_DONTCARE, TEXT("Calibri"));
+	DEFAULT_PITCH | FF_DONTCARE, TEXT("Calibri"));*/
 
-HFONT AddBtnFont = CreateFont(18, 0, 0, 0,
-	FW_BLACK, 0, 0, 0, ANSI_CHARSET,
-	OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-	DEFAULT_PITCH | FF_DONTCARE, TEXT("Segoe UI"));
-
-HFONT EditFont = CreateFont(20, 0, 0, 0, 
+HFONT EditFont = CreateFont(24, 0, 0, 0, 
 	FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
 	OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 	DEFAULT_PITCH | FF_DONTCARE, TEXT("Segoe UI"));

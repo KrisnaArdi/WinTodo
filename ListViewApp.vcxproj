@@ -137,6 +137,9 @@
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
+    <Manifest>
+      <AdditionalManifestFiles>/manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -161,10 +164,14 @@
       <MapFileName>
       </MapFileName>
       <MapExports>false</MapExports>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <Manifest>
+      <AdditionalManifestFiles>./MANIFEST.XML</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -179,7 +186,13 @@
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\Pictures\icon\delete-finished.ico" />
     <Image Include="1.ico" />
+    <Image Include="add.ico" />
+    <Image Include="basket.ico" />
+    <Image Include="delete-finished.ico" />
+    <Image Include="delete-unfinished.ico" />
+    <Image Include="delete.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="resource1.hm" />

@@ -8,8 +8,15 @@
 #define IDI_ICON1                       112
 #define IDR_ACCELERATOR1                113
 #define IDD_HELP                        129
+#define IDI_DELUNCHECK                  149
+#define IDI_DELALL                      150
+#define IDI_ICON2                       152
+#define IDI_DELFIN                      152
+#define IDI_ICON3                       155
+#define IDI_ICONADD                     155
 #define IDC_LABEL2                      1014
 #define IDC_EDIT1                       1015
+#define IDI_DELETE                      1015
 #define IDC_RICHEDIT21                  1017
 #define ID_FILE                         40001
 #define ID_FILE_SAVECHANGES             40002
@@ -25,7 +32,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        134
+#define _APS_NEXT_RESOURCE_VALUE        156
 #define _APS_NEXT_COMMAND_VALUE         40029
 #define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101

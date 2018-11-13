@@ -28,7 +28,7 @@ HWND CreateListView(HWND parent, int id) {
 	GetClientRect(parent, &rc);
 
 	HWND lview = CreateWindow(WC_LISTVIEW, L"",
-		WS_CHILD | LVS_REPORT | LVS_EDITLABELS | WS_VISIBLE | WS_BORDER,
+		WS_CHILD | LVS_REPORT | LVS_EDITLABELS | WS_VISIBLE ,
 		0, editH, rc.right - rc.left,
 		rc.bottom - (btnH + editH), parent, (HMENU)id, NULL, NULL);
 
