@@ -138,7 +138,7 @@
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
     <Manifest>
-      <AdditionalManifestFiles>/manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>./manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -196,6 +196,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resource1.hm" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="manifest.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -29,11 +29,6 @@ int iSelect = 0;
 TCHAR WindowTitle[] = L"WinTodo";
 static bool isSaved = true;
 
-/*HFONT BtnFont = CreateFont(14, 0, 0, 0,
-	FW_BLACK, 0, 0, 0, ANSI_CHARSET, 
-	OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-	DEFAULT_PITCH | FF_DONTCARE, TEXT("Calibri"));*/
-
 HFONT EditFont = CreateFont(24, 0, 0, 0, 
 	FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
 	OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,

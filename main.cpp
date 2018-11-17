@@ -75,7 +75,7 @@ LRESULT CALLBACK LViewProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UI
 	return lres;
 }
 
-//about dialog procedure, also used for help check the dialog in the resource file
+//about dialog procedure, also used for help dialog. Check the dialog in the resource file
 LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
@@ -188,7 +188,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			SendMessage(TBar, TB_AUTOSIZE, 0, 0);
 			ShowWindow(TBar, SW_SHOW);
 
-			parseOptionFile(hwnd);
+			parseOptionFile(hwnd);//load option file
 
 		/*---- Setting Font ---------------------------*/
 			SendMessage(edit, WM_SETFONT, (WPARAM)EditFont, TRUE); //edit font
@@ -427,7 +427,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					else { 
 						CheckMenuItem(hmenu, ID_SHOWADDBUTTON, MF_CHECKED);
 						AddBtnW = btnW;
-						ShowWindow(AddBtn, SW_RESTORE);
+						ShowWindow(AddBtn, SW_SHOW);
+						SetWindowPos(AddBtn, 0, rc.right - AddBtnW, TBarH, AddBtnW, editH, SWP_NOZORDER | SWP_NOSIZE);
 					}
 
 					SetWindowPos(edit, 0, 0, 0, width - AddBtnW, editH, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -469,7 +470,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				return TRUE;
 			}		
 			}
-		}break;
+		}
+		break;
 
 		case WM_SIZE: {
 			edit = GetDlgItem(hwnd, ID_INPUT);
@@ -515,8 +517,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				break;
 			}
 			}
-			break;
 		}
+		break;
 
 		default: return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
