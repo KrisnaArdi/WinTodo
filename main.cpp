@@ -44,6 +44,69 @@ std::vector<Task> TaskList;
 	 wcscpy_s(iconData.szTip, TEXT("WinTodo"));
  }
 
+ HWND initToolBar(HWND hwnd, int id) {
+	 TBBUTTON tbb[9];
+	 HWND TBar = CreateWindow(TOOLBARCLASSNAME, NULL, WS_VISIBLE | WS_CHILD | TBSTYLE_LIST | TBSTYLE_TOOLTIPS,
+		 0, 0, 0, 0,
+		 hwnd, (HMENU)id, GetModuleHandle(NULL), NULL);
+	 SendMessage(TBar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+
+	 //set the image list for toolbar
+	 HIMAGELIST imgList = ImageList_Create(20, 20, ILC_COLOR32, 1, 6);
+	 ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELETE)));
+	 ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELUNCHECK)));
+	 ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELFIN)));
+	 ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELALL)));
+	 ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_FAVORITE)));
+	 SendMessage(TBar, TB_SETIMAGELIST, 0, (LPARAM)imgList);
+	 ZeroMemory(tbb, sizeof(tbb));
+
+	 tbb[0].iBitmap = 0;
+	 tbb[0].idCommand = ID_DEL;
+	 tbb[0].fsState = TBSTATE_ENABLED;
+	 tbb[0].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+
+	 tbb[1].fsStyle = BTNS_SEP; //separator between 2 button
+	 tbb[1].iBitmap = 8;
+
+	 tbb[2].iBitmap = 1;
+	 tbb[2].idCommand = ID_DELUNFIN;
+	 tbb[2].fsState = TBSTATE_ENABLED;
+	 tbb[2].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+
+	 tbb[3].fsStyle = BTNS_SEP;
+	 tbb[3].iBitmap = 8;
+
+	 tbb[4].iBitmap = 2;
+	 tbb[4].idCommand = ID_DELFIN;
+	 tbb[4].fsState = TBSTATE_ENABLED;
+	 tbb[4].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+
+	 tbb[5].fsStyle = BTNS_SEP;
+	 tbb[5].iBitmap = 8;
+
+	 tbb[6].iBitmap = 3;
+	 tbb[6].idCommand = ID_DELALL;
+	 tbb[6].fsState = TBSTATE_ENABLED;
+	 tbb[6].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+
+	 tbb[7].fsStyle = BTNS_SEP;
+	 tbb[7].iBitmap = 8;
+
+	 tbb[8].iBitmap = 4;
+	 tbb[8].idCommand = ID_SETFAVORITE;
+	 tbb[8].fsState = TBSTATE_ENABLED;
+	 tbb[8].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
+
+	 SendMessage(TBar, TB_SETMAXTEXTROWS, 0, 0);
+	 SendMessage(TBar, TB_ADDBUTTONS, 9, (LPARAM)&tbb);
+	 SendMessage(TBar, TB_SETEXTENDEDSTYLE, 0, (LPARAM)TBSTYLE_EX_MIXEDBUTTONS);
+	 SendMessage(TBar, TB_AUTOSIZE, 0, 0);
+	 ShowWindow(TBar, SW_SHOW);
+
+	 return TBar;
+ }
+
 //the editbox procedure
 LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT_PTR Subclass, DWORD_PTR refdata) {
 	HWND parent = GetParent(hwnd); //get the main hwnd
@@ -127,6 +190,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			AppendMenu(hmenu, MF_STRING, ID_TRAY_MENU_EXIT, TEXT("Exit")); //append menu item
 
 			lview = CreateListView(hwnd, LVIEW);
+			TBar = initToolBar(hwnd, ID_TBAR);
 			
 			edit = CreateWindow(_T("EDIT"), _T(""),
 				WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
@@ -137,57 +201,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				WS_VISIBLE |WS_BORDER| WS_CHILD |BS_OWNERDRAW,
 				rc.right - AddBtnW, 0, AddBtnW+1, editH,
 				hwnd, (HMENU)ID_ADD, NULL, NULL);
-			
-		/* ------ Creating Toolbar -------------------------------- */
-			TBBUTTON tbb[7];
-			TBar = CreateWindow(TOOLBARCLASSNAME, NULL, WS_VISIBLE | WS_CHILD | TBSTYLE_LIST | TBSTYLE_TOOLTIPS,
-				0, 0, 0, 0,
-				hwnd, (HMENU)ID_TBAR, GetModuleHandle(NULL), NULL);
-			SendMessage(TBar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-
-			HIMAGELIST imgList = ImageList_Create(20, 20, ILC_COLOR32, 1, 5);
-			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELETE)));
-			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELUNCHECK)));
-			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELFIN)));
-			ImageList_AddIcon(imgList, LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DELALL)));
-			SendMessage(TBar, TB_SETIMAGELIST, 0, (LPARAM)imgList);		
-			ZeroMemory(tbb, sizeof(tbb));
-
-			tbb[0].iBitmap = 0;
-			tbb[0].idCommand = ID_DEL;
-			tbb[0].fsState = TBSTATE_ENABLED;
-			tbb[0].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
-
-			tbb[1].fsStyle = BTNS_SEP; //separator between 2 button
-			tbb[1].iBitmap = 8;
-
-			tbb[2].iBitmap = 1;
-			tbb[2].idCommand = ID_DELUNFIN;
-			tbb[2].fsState = TBSTATE_ENABLED;
-			tbb[2].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
-
-			tbb[3].fsStyle = BTNS_SEP;
-			tbb[3].iBitmap = 8;
-
-			tbb[4].iBitmap = 2;
-			tbb[4].idCommand = ID_DELFIN;
-			tbb[4].fsState = TBSTATE_ENABLED;
-			tbb[4].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
-
-			tbb[5].fsStyle = BTNS_SEP;
-			tbb[5].iBitmap = 8;
-
-			tbb[6].iBitmap = 3;
-			tbb[6].idCommand = ID_DELALL;
-			tbb[6].fsState = TBSTATE_ENABLED;
-			tbb[6].fsStyle = TBSTYLE_BUTTON | TBSTYLE_FLAT;
-			
-			SendMessage(TBar, TB_SETMAXTEXTROWS, 0, 0);
-			SendMessage(TBar, TB_ADDBUTTONS, 7, (LPARAM)&tbb);
-			SendMessage(TBar, TB_SETEXTENDEDSTYLE, 0, (LPARAM)TBSTYLE_EX_MIXEDBUTTONS);
-			SendMessage(TBar, TB_AUTOSIZE, 0, 0);
-			ShowWindow(TBar, SW_SHOW);
-
+					
 			parseOptionFile(hwnd);//load option file
 
 		/*---- Setting Font ---------------------------*/
@@ -242,6 +256,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 							break;
 
 							case INDEXTOSTATEIMAGEMASK(1): { //item was unchecked
+								if (TaskList[pnm->iItem].status == 2) break;
 								ToggleTaskStatus(TaskList, lview, pnm->iItem, 0);	
 								ToggleUnsavedTitle(hwnd, 0);
 							}
@@ -250,33 +265,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						
 					}
 				}
+
+				//tooltip
+				if (((LPNMHDR)lparam)->code == TTN_GETDISPINFO) {
+								LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lparam;
+								lpttt->hinst = GetModuleHandle(NULL);
+								UINT_PTR idButton = lpttt->hdr.idFrom;
+								switch (idButton) {
+								case ID_DEL: {
+									lpttt->lpszText = _TEXT("Delete task");
+									break;
+								}
+								case ID_DELUNFIN: {
+									lpttt->lpszText = _TEXT("Delete unchecked tasks");
+									break;
+								}
+								case ID_DELFIN: {
+									lpttt->lpszText = _TEXT("Delete checked tasks");
+									break;
+								}
+								case ID_DELALL: {
+									lpttt->lpszText = _TEXT("Delete all tasks");
+									break;
+								}
+								}
+							}
 			break;
 			}
 
-		//tooltip
-			if (((LPNMHDR)lparam)->code == TTN_GETDISPINFO) {
-				LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lparam;
-				lpttt->hinst = GetModuleHandle(NULL);
-				UINT_PTR idButton = lpttt->hdr.idFrom;
-				switch (idButton) {
-				case ID_DEL: {
-					lpttt->lpszText = _TEXT("Delete task");
-					break;
-				}
-				case ID_DELUNFIN: {
-					lpttt->lpszText = _TEXT("Delete unchecked tasks");
-					break;
-				}
-				case ID_DELFIN: {
-					lpttt->lpszText = _TEXT("Delete checked tasks");
-					break;
-				}
-				case ID_DELALL: {
-					lpttt->lpszText = _TEXT("Delete all tasks");
-					break;
-				}
-				}
-			}
+		
 		}
 		break;
 
@@ -309,20 +326,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					int iSelect = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
 					HMENU hmenu = GetMenu(hwnd);
 
-					if (iSelect == -1) MessageBox(NULL, _T("Select item first before delete it by clicking the item!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
-				//if an item is not selected	
-					else {
-						if (isMenuChecked(hmenu, ID_CONFIRMONDELETE)) { //confirmation box
-							int confirm = MessageBox(NULL, _T("Delete this task?"), _T("Confirmation"), MB_ICONQUESTION | MB_YESNO);
-							if (confirm == IDNO) break;
-						}
-						while (iSelect != -1) {
-							SendMessage(lview, LVM_DELETEITEM, iSelect, 0); //delete the task from the listview
-							TaskList.erase(TaskList.begin() + iSelect); //delete the task from the vector
-							iSelect = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
-						}
-						ToggleUnsavedTitle(hwnd, 0); //toggling the title
+					//if an item is not selected
+					if (iSelect == -1) {
+						MessageBox(NULL, _T("Select an item first before delete it!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
+						break;
 					}
+
+					if (isMenuChecked(hmenu, ID_CONFIRMONDELETE)) { //confirmation box
+						int confirm = MessageBox(NULL, _T("Delete this task?"), _T("Confirmation"), MB_ICONQUESTION | MB_YESNO);
+						if (confirm == IDNO) break;
+					}
+					while (iSelect != -1) {
+						SendMessage(lview, LVM_DELETEITEM, iSelect, 0); //delete the task from the listview
+						TaskList.erase(TaskList.begin() + iSelect); //delete the task from the vector
+						iSelect = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+					}
+					ToggleUnsavedTitle(hwnd, 0); //toggling the title
 				}
 				break;
 
@@ -351,7 +370,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 				case ID_DELFIN: {
 					lview = GetDlgItem(hwnd, LVIEW);
-			
 					int confirm = MessageBox(NULL, _T("All checked items is about to be deleted"), _T("Confirmation"), MB_ICONQUESTION |MB_OKCANCEL);
 					
 					if (confirm == IDOK) {
@@ -364,21 +382,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	
 				case ID_DELUNFIN: {
 					lview = GetDlgItem(hwnd, LVIEW);
-
 					int confirm = MessageBox(NULL, _T("All unchecked items is about to be deleted"), _T("Confirmation"), MB_ICONQUESTION | MB_OKCANCEL);
+					
 					if (confirm == IDOK) {
 						DeleteTaskBasedOnStatus(TaskList, lview, false);
 						ToggleUnsavedTitle(hwnd, 0);
 						MessageBox(NULL, _T("All unchecked items has been deleted"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 					} 
-			}
+				}
+				break;
+
+				case ID_SETFAVORITE: {
+					lview = GetDlgItem(hwnd, LVIEW);
+					int iSelect = SendMessage(lview, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+					if (iSelect == -1) MessageBox(NULL, _T("Select an item first!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
+					
+					if (TaskList[iSelect].status == 0) ToggleTaskStatus(TaskList, lview, iSelect, 2);
+					else if (TaskList[iSelect].status == 2)  ToggleTaskStatus(TaskList, lview, iSelect, 0);
+					else break;
+					ToggleUnsavedTitle(hwnd, 0);
+				}
 				break;
 
 				case ID_FILE_SAVECHANGES: {
-				WriteTaskToFile(TaskList);
-
-				ToggleUnsavedTitle(hwnd, 1);
-				MessageBox(NULL, _T("Changes saved!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
+					WriteTaskToFile(TaskList);
+					ToggleUnsavedTitle(hwnd, 1);
+					MessageBox(NULL, _T("Changes saved!"), _T("Information"), MB_ICONINFORMATION | MB_OK);
 				}
 				break;
 				
@@ -388,7 +417,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				break;
 
 				case ID_FILE_EXIT: {
-				PostMessage(hwnd, WM_CLOSE, 0, 0);
+					PostMessage(hwnd, WM_CLOSE, 0, 0);
 				}
 				break;
 
@@ -428,7 +457,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						CheckMenuItem(hmenu, ID_SHOWADDBUTTON, MF_CHECKED);
 						AddBtnW = btnW;
 						ShowWindow(AddBtn, SW_SHOW);
-						SetWindowPos(AddBtn, 0, rc.right - AddBtnW, TBarH, AddBtnW, editH, SWP_NOZORDER | SWP_NOSIZE);
+						SetWindowPos(AddBtn, 0, width - AddBtnW, TBarH, AddBtnW, editH, SWP_NOZORDER | SWP_NOSIZE);
 					}
 
 					SetWindowPos(edit, 0, 0, 0, width - AddBtnW, editH, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -530,7 +559,6 @@ int WINAPI WinMain(HINSTANCE hins, HINSTANCE hprev, LPSTR lpcmd, int ncmd) {
 	BOOL bRet;
 	HACCEL haccel;
 	haccel = LoadAccelerators(hins, MAKEINTRESOURCE(IDR_ACCELERATOR1)); //binding windows with an accelerator
-
 	memset(&wc, 0, sizeof(wc));
 
 	wc.cbSize = sizeof(wc);

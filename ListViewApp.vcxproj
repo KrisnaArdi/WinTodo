@@ -146,7 +146,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -154,6 +154,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <MinimalRebuild>true</MinimalRebuild>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <ConformanceMode>false</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -186,13 +187,13 @@
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\Pictures\icon\delete-finished.ico" />
     <Image Include="1.ico" />
     <Image Include="add.ico" />
     <Image Include="basket.ico" />
     <Image Include="delete-finished.ico" />
     <Image Include="delete-unfinished.ico" />
     <Image Include="delete.ico" />
+    <Image Include="favorite.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="resource1.hm" />

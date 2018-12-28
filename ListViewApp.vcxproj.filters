@@ -54,10 +54,10 @@
     <Image Include="basket.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\..\..\Pictures\icon\delete-finished.ico">
+    <Image Include="add.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="add.ico">
+    <Image Include="favorite.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

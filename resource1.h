@@ -14,6 +14,8 @@
 #define IDI_DELFIN                      152
 #define IDI_ICON3                       155
 #define IDI_ICONADD                     155
+#define IDI_ICON4                       157
+#define IDI_FAVORITE                    157
 #define IDC_LABEL2                      1014
 #define IDC_EDIT1                       1015
 #define IDI_DELETE                      1015
@@ -32,7 +34,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        156
+#define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         40029
 #define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101

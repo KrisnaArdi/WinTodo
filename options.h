@@ -50,24 +50,24 @@ bool parseOptionFile(HWND hwnd) {
 bool writeOptionToFile(HWND hwnd) {
 	HMENU hmenu = GetMenu(hwnd);
 	HWND lview = GetDlgItem(hwnd, LVIEW);
-	TCHAR temp;
+	TCHAR temp[256];
 	WINDOWPLACEMENT wp;
 
 	//confirm on delete
-	_itow(isMenuChecked(hmenu, ID_CONFIRMONDELETE), &temp, 10);
-	WritePrivateProfileString(_T("Menu"), _T("ConfirmOnDelete"), &temp, filePath);
+	_itow_s(isMenuChecked(hmenu, ID_CONFIRMONDELETE), temp, 10);
+	WritePrivateProfileString(_T("Menu"), _T("ConfirmOnDelete"), temp, filePath);
 	
 	//show add button
-	_itow(isMenuChecked(hmenu, ID_SHOWADDBUTTON), &temp, 10);
-	WritePrivateProfileString(_T("Menu"), _T("ShowAddButton"), &temp, filePath);
+	_itow_s(isMenuChecked(hmenu, ID_SHOWADDBUTTON), temp, 10);
+	WritePrivateProfileString(_T("Menu"), _T("ShowAddButton"), temp, filePath);
 	
 	//Task Name Column Width
-	_itow(ListView_GetColumnWidth(lview, 0), &temp, 10);
-	WritePrivateProfileString(_T("Column"), _T("TaskNameWidth"), &temp, filePath);
+	_itow_s(ListView_GetColumnWidth(lview, 0), temp, 10);
+	WritePrivateProfileString(_T("Column"), _T("TaskNameWidth"), temp, filePath);
 
 	//Status Column Width
-	_itow(ListView_GetColumnWidth(lview, 1), &temp, 10);
-	WritePrivateProfileString(_T("Column"), _T("StatusWidth"), &temp, filePath);
+	_itow_s(ListView_GetColumnWidth(lview, 1), temp, 10);
+	WritePrivateProfileString(_T("Column"), _T("StatusWidth"), temp, filePath);
 
 	//Window Placement
 	GetWindowPlacement(hwnd, &wp);

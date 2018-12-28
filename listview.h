@@ -2,6 +2,7 @@
 
 static int TaskNameW = 330;
 static int TaskStatusW = 120;
+
 typedef struct {
 	//remember string in c cannot be modifiedable by just using = (this is to remind myself)
 	TCHAR name[256];
@@ -129,15 +130,16 @@ void renderTask(std::vector<Task> TaskList, HWND lview) {
 		lvi.pszText = it->name;
 
 		ListView_InsertItem(lview, &lvi);
+		if(it->status!=2) ListView_SetCheckState(lview, i, it->status); 
 
-		ListView_SetCheckState(lview, i, it->status);
-
-		(it->status) ? status = _T("Finished") : status = _T("Unfinished");
-
+		if (it->status == 0) status = _T("Unfinished");
+		else if (it->status == 1) status = _T("Finished");
+		else if (it->status == 2) status = _T("Prioritized");
 		lvi.iItem = i;
 		lvi.iSubItem = 1;
 		lvi.pszText = status;
 		ListView_SetItem(lview, &lvi);
+		
 		++i;
 	}
 	HWND hwnd = GetParent(lview);
@@ -172,9 +174,12 @@ LRESULT ProcessCustomDraw(LPARAM lparam, std::vector<Task> TaskList) {
 		case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
 		//if the task not finished yet
 			if (TaskList[lpl->nmcd.dwItemSpec].status == 0) lpl->clrText = RGB(0, 0, 0);
-			else {
+			else if(TaskList[lpl->nmcd.dwItemSpec].status == 1) {
 				lpl->clrText = RGB(80, 80, 80);
 				lpl->clrTextBk = RGB(205, 205, 220);
+			}
+			else if (TaskList[lpl->nmcd.dwItemSpec].status == 2) {
+				lpl->clrTextBk = RGB(240, 240, 40);
 			}
 
 			return CDRF_NEWFONT;
@@ -185,16 +190,17 @@ LRESULT ProcessCustomDraw(LPARAM lparam, std::vector<Task> TaskList) {
 	}
 }
 
-//toggle wether task finished or not
+//toggle the status of the task
 void ToggleTaskStatus(std::vector<Task> &TaskList, HWND lview, int iItem, int status) {
 	LVITEM lvi;
-
 	lvi.mask = LVIF_TEXT;
 	lvi.iItem = iItem;
 	lvi.iSubItem = 1;
 
 	TaskList[iItem].status = status;
-	(status) ? lvi.pszText = _T("Finished") : lvi.pszText = _T("Unfinished");
+	if (status == 0) lvi.pszText = _T("Unfinished");
+	else if (status == 1) lvi.pszText = _T("Finished");
+	else lvi.pszText = _T("Prioritized");
 
 	ListView_SetItem(lview, &lvi);
 }

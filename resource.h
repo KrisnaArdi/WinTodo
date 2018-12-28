@@ -1,6 +1,6 @@
 #pragma once
 #pragma comment(lib, "comctl32.lib")
-#define LVIEW 101
+#define LVIEW			100
 #define ID_INPUT		102
 #define ID_LVSTATIC		103
 
@@ -9,6 +9,7 @@
 #define ID_DELALL		203
 #define ID_DELFIN		204
 #define ID_DELUNFIN		205
+#define ID_SETFAVORITE	206
 
 #define ID_STATUSBAR	1001
 #define ID_TBAR			1002
