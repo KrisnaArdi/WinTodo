@@ -1,15 +1,16 @@
 #pragma once
 
 static int TaskNameW = 330;
-static int TaskStatusW = 120;
+static int TaskStatusW = 90;
+static int TaskDateW = 120;
 
 typedef struct {
 	//remember string in c cannot be modifiedable by just using = (this is to remind myself)
-	TCHAR name[256];
+	TCHAR name[256] = { 0 };
 	int status;
+	TCHAR date[128] = { 0 };
 } Task;
-
-bool InitColumn(HWND);
+bool InitColumn(HWND lview);
 
 //toggling the title 
 void ToggleUnsavedTitle(HWND hwnd, bool saved) {
@@ -46,13 +47,16 @@ bool InitColumn(HWND lview) {
 	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvc.fmt = LVCFMT_LEFT;
 	lvc.cx = 330;
-	lvc.pszText = L"Task Name";
-
+	lvc.pszText = _T("Task Name");
 	ListView_InsertColumn(lview, 1, &lvc);
 
 	lvc.cx = 120;
-	lvc.pszText = L"Status";
+	lvc.pszText = _T("Date");
 	ListView_InsertColumn(lview, 1, &lvc);
+
+	lvc.cx = 120;
+	lvc.pszText = _T("Status");
+	ListView_InsertColumn(lview, 2, &lvc);
 
 	return true;
 }
@@ -109,6 +113,11 @@ bool LoadTaskFromFile(std::vector<Task> *TaskList, HWND lview) {
 	//task status
 		str = wcstok_s(NULL, L";", &buffer);
 		temp.status = _wtoi(str);
+	
+	//task date
+		str = wcstok_s(NULL, L";", &buffer);
+		if (wcscmp(str, _T("\n")) == 0) wcscpy_s(temp.date, _T(" "));  //help file from previous version adapt
+		else wcscpy_s(temp.date, str);
 	 
 		TaskList->insert(TaskList->begin(), temp); //insert the task to the first item of the vector
 	}
@@ -130,13 +139,17 @@ void renderTask(std::vector<Task> TaskList, HWND lview) {
 		lvi.pszText = it->name;
 
 		ListView_InsertItem(lview, &lvi);
+		lvi.iSubItem = 1;
+		lvi.pszText = it->date;
+		ListView_SetItem(lview, &lvi);
+
 		if(it->status!=2) ListView_SetCheckState(lview, i, it->status); 
 
 		if (it->status == 0) status = _T("Unfinished");
 		else if (it->status == 1) status = _T("Finished");
-		else if (it->status == 2) status = _T("Prioritized");
+		else status = _T("Prioritized");
 		lvi.iItem = i;
-		lvi.iSubItem = 1;
+		lvi.iSubItem = 2;
 		lvi.pszText = status;
 		ListView_SetItem(lview, &lvi);
 		
@@ -152,7 +165,7 @@ void WriteTaskToFile(std::vector<Task> TaskList) {
 	fopen_s(&File, "data/data.csv", "w+");
 
 	for (std::vector<Task>::iterator it = TaskList.end()-1; it != TaskList.begin()-1; --it) {
-		fwprintf(File, L"%s;%d;\n", it->name, it->status);
+		fwprintf(File, L"%s;%d;%s;\n", it->name, it->status, it->date);
 	}
  	fclose(File);
 }
@@ -195,7 +208,7 @@ void ToggleTaskStatus(std::vector<Task> &TaskList, HWND lview, int iItem, int st
 	LVITEM lvi;
 	lvi.mask = LVIF_TEXT;
 	lvi.iItem = iItem;
-	lvi.iSubItem = 1;
+	lvi.iSubItem = 2;
 
 	TaskList[iItem].status = status;
 	if (status == 0) lvi.pszText = _T("Unfinished");
@@ -205,12 +218,22 @@ void ToggleTaskStatus(std::vector<Task> &TaskList, HWND lview, int iItem, int st
 	ListView_SetItem(lview, &lvi);
 }
 
-bool AddTask(std::vector<Task> &TaskList, HWND lview, TCHAR pszText[256]) {
+int AddTask(std::vector<Task> &TaskList, HWND lview, TCHAR pszText[256]) {
 	LVITEM lvi;
+	PDWORD cChars = NULL;
+
+	SYSTEMTIME lt = { 0 };
+	TCHAR date[128] = { 0 };
+	GetLocalTime(&lt);
+
+	//print systemtime to the string based on date format
+	 GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_LONGDATE,
+		&lt, NULL, date, sizeof(date) / sizeof(date[0]), NULL);
 
 	//create a new Task class and insert it to the vector
 	Task newTask;
 	wcscpy_s(newTask.name, pszText);
+	wcscpy_s(newTask.date, date);
 	newTask.status = 0; //status is absolutely unfinished 
 	TaskList.insert(TaskList.begin(), newTask);
 
@@ -222,10 +245,14 @@ bool AddTask(std::vector<Task> &TaskList, HWND lview, TCHAR pszText[256]) {
 	ListView_InsertItem(lview, &lvi);
 
 	lvi.iSubItem = 1;
+	lvi.pszText = date;
+	ListView_SetItem(lview, &lvi);
+
+	lvi.iSubItem = 2;
 	lvi.pszText = _T("Unfinished");
 	ListView_SetItem(lview, &lvi);
 
-		return true;
+		return 0;
 }
 
 bool ProcessLabelEdit(std::vector<Task> &TaskList, int iIndex, HWND lview) {

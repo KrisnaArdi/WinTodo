@@ -36,9 +36,13 @@ bool parseOptionFile(HWND hwnd) {
 	temp = GetPrivateProfileInt(_T("Column"), _T("TaskNameWidth"), 330, filePath);
 	ListView_SetColumnWidth(lview, 0, temp);
 
+	//Date Column Width
+	temp = GetPrivateProfileInt(_T("Column"), _T("DateWidth"), 120, filePath);
+	ListView_SetColumnWidth(lview, 1, temp);
+
 	//Status Column Width
 	temp = GetPrivateProfileInt(_T("Column"), _T("StatusWidth"), 120, filePath);
-	ListView_SetColumnWidth(lview, 1, temp);
+	ListView_SetColumnWidth(lview, 2, temp);
 
 	//Widnow Placement
 	GetPrivateProfileStruct(_T("WindowSize"), _T("Placement"), LPBYTE(&wp), sizeof(wp), filePath);
@@ -64,9 +68,13 @@ bool writeOptionToFile(HWND hwnd) {
 	//Task Name Column Width
 	_itow_s(ListView_GetColumnWidth(lview, 0), temp, 10);
 	WritePrivateProfileString(_T("Column"), _T("TaskNameWidth"), temp, filePath);
+	
+	//Date Column Width
+	_itow_s(ListView_GetColumnWidth(lview, 1), temp, 10);
+	WritePrivateProfileString(_T("Column"), _T("DateWidth"), temp, filePath);
 
 	//Status Column Width
-	_itow_s(ListView_GetColumnWidth(lview, 1), temp, 10);
+	_itow_s(ListView_GetColumnWidth(lview, 2), temp, 10);
 	WritePrivateProfileString(_T("Column"), _T("StatusWidth"), temp, filePath);
 
 	//Window Placement
