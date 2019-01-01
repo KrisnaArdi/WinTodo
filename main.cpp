@@ -265,34 +265,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 						
 					}
 				}
-
-				//tooltip
-				if (((LPNMHDR)lparam)->code == TTN_GETDISPINFO) {
-								LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lparam;
-								lpttt->hinst = GetModuleHandle(NULL);
-								UINT_PTR idButton = lpttt->hdr.idFrom;
-								switch (idButton) {
-								case ID_DEL: {
-									lpttt->lpszText = _TEXT("Delete task");
-									break;
-								}
-								case ID_DELUNFIN: {
-									lpttt->lpszText = _TEXT("Delete unchecked tasks");
-									break;
-								}
-								case ID_DELFIN: {
-									lpttt->lpszText = _TEXT("Delete checked tasks");
-									break;
-								}
-								case ID_DELALL: {
-									lpttt->lpszText = _TEXT("Delete all tasks");
-									break;
-								}
-								}
-							}
 			break;
 			}
-
+		
+			//tooltip
+			if (((LPNMHDR)lparam)->code == TTN_GETDISPINFO) {
+				LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lparam;
+				lpttt->hinst = GetModuleHandle(NULL);
+				UINT_PTR idButton = lpttt->hdr.idFrom;
+				switch (idButton) {
+				case ID_DEL: {
+					lpttt->lpszText = _TEXT("Delete task");
+					break;
+				}
+				case ID_DELUNFIN: {
+					lpttt->lpszText = _T("Delete unchecked tasks");
+					break;
+				}
+				case ID_DELFIN: {
+					lpttt->lpszText = _T("Delete checked tasks");
+					break;
+				}
+				case ID_DELALL: {
+					lpttt->lpszText = _T("Delete all tasks");
+					break;
+				}
+				case ID_SETFAVORITE: {
+					lpttt->lpszText = _T("Set as Priority");
+					break;
+				}
+				}
+			}
 		
 		}
 		break;
