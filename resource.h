@@ -20,12 +20,13 @@
 #define ID_TRAY_MENU_EXIT 201
 #define WM_TRAYICON (WM_USER+1)
 
+int iSelect = 0;
 int btnW = 32;
 int btnH = 32;
 int editH = 32;
 int TBarH = 32;
 static int AddBtnW = 32;
-int iSelect = 0;
+static bool SingleColumn = 0;
 
 TCHAR WindowTitle[] = L"WinTodo";
 static bool isSaved = true;
