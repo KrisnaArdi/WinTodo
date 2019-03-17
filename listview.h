@@ -3,6 +3,7 @@
 static int TaskNameW = 330;
 static int TaskStatusW = 90;
 static int TaskDateW = 120;
+extern bool SingleColumn;
 
 typedef struct {
 	//remember string in c cannot be modifiedable by just using = (this is to remind myself)
@@ -34,7 +35,7 @@ HWND CreateListView(HWND parent, int id) {
 		0, editH, rc.right - rc.left,
 		rc.bottom - (btnH + editH), parent, (HMENU)id, NULL, NULL);
 
-	ListView_SetExtendedListViewStyle(lview, LVS_EX_INFOTIP|LVS_EX_FULLROWSELECT|LVS_EX_CHECKBOXES);
+	ListView_SetExtendedListViewStyle(lview, LVS_EX_INFOTIP|LVS_EX_FULLROWSELECT|LVS_EX_CHECKBOXES| LVS_EX_TRACKSELECT);
 
 	InitColumn(lview);
 
@@ -49,6 +50,10 @@ bool InitColumn(HWND lview) {
 	lvc.cx = 330;
 	lvc.pszText = _T("Task Name");
 	ListView_InsertColumn(lview, 1, &lvc);
+
+	if (SingleColumn == true) {
+		return true;
+	}
 
 	lvc.cx = 120;
 	lvc.pszText = _T("Date");
