@@ -434,7 +434,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				case ID_HELP_HELP: {
 					DialogBox(GetModuleHandle(NULL),
 						MAKEINTRESOURCE(IDD_HELP), hwnd, (DLGPROC)AboutProc);
-				}break;
+				}
 
 				case ID_CONFIRMONDELETE : {
 					HMENU hmenu = GetMenu(hwnd);
@@ -466,59 +466,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					SetWindowPos(edit, 0, 0, 0, width - AddBtnW, editH, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 				}break;
 				
-				case ID_TRACKSELECT: {
-					HMENU hmenu = GetMenu(hwnd);
-					HWND lview = GetDlgItem(hwnd, LVIEW);
-				
-					if (isMenuChecked(hmenu, ID_TRACKSELECT)) {
-						CheckMenuItem(hmenu, ID_TRACKSELECT, MF_UNCHECKED);
-						DWORD dwExStyle = ListView_GetExtendedListViewStyle(lview);
-						dwExStyle &= ~LVS_EX_TRACKSELECT;
-						ListView_SetExtendedListViewStyle(lview, dwExStyle);
-					}
-					else { 
-						CheckMenuItem(hmenu, ID_TRACKSELECT, MF_CHECKED);
-						DWORD dwExStyle = ListView_GetExtendedListViewStyle(lview);
-						dwExStyle |= LVS_EX_TRACKSELECT;
-						ListView_SetExtendedListViewStyle(lview, dwExStyle);
-					}
-				}break;
-
-				case ID_SINGLECOLUMN: {
-					HMENU hmenu = GetMenu(hwnd);
-					HWND lview = GetDlgItem(hwnd, LVIEW);
-					GetClientRect(lview, &rc);
-					int temp;
-					if (isMenuChecked(hmenu, ID_SINGLECOLUMN)) {
-						SingleColumn = false;
-						ListView_DeleteColumn(lview, 0); //delete first column
-						InitColumn(lview); //initialize all the column 
-						SendMessage(lview, LVM_DELETEALLITEMS, 0, 0); //empty the listview 
-						renderTask(TaskList, lview); //render from the vector
-						//set all the column width 
-						ListView_SetColumnWidth(lview, 0, TaskNameW);
-						ListView_SetColumnWidth(lview, 1, TaskDateW);
-						ListView_SetColumnWidth(lview, 2, TaskStatusW);
-
-						CheckMenuItem(hmenu, ID_SINGLECOLUMN, MF_UNCHECKED);
-					}
-					else {
-						SingleColumn = true;
-
-						//save all the column width for if the user get out of single column mode
-						TaskNameW = ListView_GetColumnWidth(lview, 0);
-						TaskDateW = ListView_GetColumnWidth(lview, 1);
-						TaskStatusW = ListView_GetColumnWidth(lview, 2);
-
-						
-						ListView_DeleteColumn(lview, 1);
-						ListView_DeleteColumn(lview, 1);
-						ListView_SetColumnWidth(lview, 0, (rc.right - 1));
-						CheckMenuItem(hmenu, ID_SINGLECOLUMN, MF_CHECKED);
-					}
-
-				}break;
-			
 		}
 	}
 		break;
